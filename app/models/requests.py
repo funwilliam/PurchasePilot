@@ -1,8 +1,8 @@
-from models import Base
+from app.models.base import Base, db
 from sqlalchemy import Column, Integer, Float, String, Text, Date, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 
-class Request(Base):
+class Request(db.Model):
     __tablename__ = 'requests'
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment='工程部內申請單號')

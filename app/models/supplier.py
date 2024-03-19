@@ -1,8 +1,8 @@
-from models import Base
+from app.models.base import Base, db
 from sqlalchemy import Column, String, DateTime, func
 from sqlalchemy.orm import relationship
 
-class Supplier(Base):
+class Supplier(db.Model):
     __tablename__ = 'suppliers'
 
     supplier_id = Column(String, primary_key=True, comment='供應商編號')

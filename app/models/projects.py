@@ -1,8 +1,8 @@
-from models import Base
+from app.models.base import Base, db
 from sqlalchemy import Column, Integer, Boolean, String, Text, DateTime, func
 from sqlalchemy.orm import relationship
 
-class Project(Base):
+class Project(db.Model):
     __tablename__ = 'ed_projects'
 
     id = Column(Integer, primary_key=True, comment='默認遞增主鍵')

@@ -1,8 +1,8 @@
-from models import Base
+from app.models.base import Base, db
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
 
-class Office(Base):
+class Office(db.Model):
     __tablename__ = 'minmax_offices'
 
     office_id = Column(String, primary_key=True, comment='地址碼')

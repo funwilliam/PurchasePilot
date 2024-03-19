@@ -1,8 +1,8 @@
-from models import Base
+from app.models.base import Base, db
 from sqlalchemy import Column, Integer, Boolean, Float, String, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 
-class Acceptance(Base):
+class Acceptance(db.Model):
     __tablename__ = 'acceptance_notes'
 
     id = Column(String, primary_key=True, comment='資材部收料單號')

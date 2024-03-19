@@ -18,11 +18,7 @@ from decimal import Decimal, ROUND_HALF_UP, ROUND_DOWN
 
 class utils:
     @classmethod
-    def make_db_connector(cls, host: str, port: str, database_name: str, username: str, password: str) -> Engine:        
-        # 建立資料庫連接字串
-        db_url = f'postgresql://{username}:{password}@{host}:{port}/{database_name}'
-
-        # 建立資料庫引擎
-        engine = create_engine(db_url)
-        # 返回資料庫連接
-        return engine
+    def make_DBURL(cls, user: str, password: str, host: str, port: str, database_name: str) -> str:
+        """ 建立資料庫連接字串 """
+        db_url = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
+        return db_url

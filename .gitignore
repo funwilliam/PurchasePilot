@@ -1,7 +1,23 @@
+# Created by https://www.toptal.com/developers/gitignore/api/flask
+# Edit at https://www.toptal.com/developers/gitignore?templates=flask
+
+### Flask ###
+instance/*
+!instance/.gitignore
+.webassets-cache
+.env
+
+### Flask.Python Stack ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# flask_sqlalchemy Migrate
+migrations/
+
+# Python __init__
+__init__.py
 
 # C extensions
 *.so
@@ -25,7 +41,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-__init__.py
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -64,7 +79,6 @@ db.sqlite3-journal
 
 # Flask stuff:
 instance/
-.webassets-cache
 
 # Scrapy stuff:
 .scrapy
@@ -121,14 +135,12 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
-venv
 
 # Spyder project settings
 .spyderproject
@@ -160,3 +172,5 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+# End of https://www.toptal.com/developers/gitignore/api/flask

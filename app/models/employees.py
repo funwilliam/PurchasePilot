@@ -1,8 +1,8 @@
-from models import Base
+from app.models.base import Base, db
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 
-class Employee(Base):
+class Employee(db.Model):
     __tablename__ = 'employees'
 
     id = Column(Integer, primary_key=True, comment='默認遞增主鍵')

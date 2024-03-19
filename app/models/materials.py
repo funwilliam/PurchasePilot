@@ -1,8 +1,8 @@
-from models import Base
+from app.models.base import Base, db
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 
-class Material(Base):
+class Material(db.Model):
     __tablename__ = 'materials'
     
     id = Column(Integer, primary_key=True, comment='默認遞增主鍵')

@@ -1,8 +1,8 @@
-from models import Base
+from app.models.base import Base, db
 from sqlalchemy import Column, String, DateTime
 from sqlalchemy.orm import relationship
 
-class Requisition(Base):
+class Requisition(db.Model):
     __tablename__ = 'purchase_requisitions'
 
     id = Column(String, primary_key=True, comment='資材部請購單號')
