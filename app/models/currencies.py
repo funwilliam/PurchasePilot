@@ -1,7 +1,9 @@
 from app.models.base import Base, db
 from sqlalchemy import Column, String
 
-class Currency(db.Model):
-    __tablename__ = 'currencies'
+class 幣別(db.Model):
+    __tablename__ = '幣別'
 
-    currency_name = Column(String, primary_key=True, comment='幣別名稱')
+    代號 = Column(String, primary_key=True)
+    名稱 = Column(String)
+    維運組織 = Column(String)

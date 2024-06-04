@@ -1,7 +1,7 @@
 from app.models.base import Base, db
 from sqlalchemy import Column, String
 
-class Unit(db.Model):
-    __tablename__ = 'units'
+class 單位(db.Model):
+    __tablename__ = '單位'
 
-    unit_name = Column(String, primary_key=True, comment='單位名稱')
+    單位名稱 = Column(String, primary_key=True)

@@ -1,22 +1,30 @@
 from app.models.base import Base, db
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, Boolean, String, Float, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 
-class Material(db.Model):
-    __tablename__ = 'materials'
+class 物料(db.Model):
+    __tablename__ = '物料'
     
-    id = Column(Integer, primary_key=True, comment='默認遞增主鍵')
-    material_id = Column(String, nullable=False, comment='物料代號')
-    material_name = Column(String, nullable=False, comment='品名規格')
-    default_material_category = Column(String, ForeignKey('material_categories.category'), nullable=False, comment='預設物料類別') # 請購單有實際物料類別欄。
-    supplier_name = Column(String, ForeignKey('suppliers.short_name'), comment='供應商簡稱')
-    unit_price = Column(Float, nullable=False, comment='單價')
-    unit = Column(String, ForeignKey('units.unit_name'), nullable=False, comment='單位') # 外鍵確保單位統一
-    currency = Column(String, ForeignKey('currencies.currency_name'), nullable=False, comment='幣別') # 外鍵確保幣別統一
-    default_delivery_location_id = Column(String, ForeignKey('minmax_offices.office_id'), nullable=False, comment='預設收貨地址碼') # 資材部建檔與物料管理用，未來可能棄用。請購單有實際收貨地址欄。
-    last_use_at = Column(DateTime(timezone=True), comment='最後使用時間戳')
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, comment='建檔時間戳')
-    deleted_at = Column(DateTime(timezone=True), comment='廢棄時間戳')
+    默認主鍵 = Column(Integer, primary_key=True, autoincrement=True)
+    物料代號 = Column(String, nullable=False)
+    供應商簡稱 = Column(String, ForeignKey('供應商.簡稱'))
+    品名規格 = Column(String, nullable=False)
+    預設物料類別 = Column(String, ForeignKey('物料類別.類別'), nullable=False) # 請購單有實際物料類別欄。
+    單價 = Column(Float, nullable=False)
+    單位 = Column(String, ForeignKey('單位.單位名稱'), nullable=False) # 外鍵確保單位統一
+    幣別 = Column(String, ForeignKey('幣別.代號'), nullable=False) # 外鍵確保幣別統一
+    預設收貨廠區 = Column(String, ForeignKey('捷拓廠區.廠區名稱'), nullable=False) # 資材部建檔與物料管理用，未來可能棄用。請購單有實際收貨地址欄。
     
-    # 建立到 Supplier 的關聯
-    supplier = relationship("Supplier", back_populates="materials")
+    報價單路徑 = Column(String)
+    報價單有效期限 = Column(DateTime(timezone=True))
+
+    啟用信標 = Column(Boolean, server_default='true', nullable=False)
+
+    創建時間戳 = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    更新時間戳 = Column(DateTime(timezone=True), onupdate=func.now()) # 僅用於補充資料or更正錯誤資料使用，不停用
+    刪除時間戳 = Column(DateTime(timezone=True)) # 停用
+    
+    # 建立到 請購紀錄明細 供應商 的關聯
+    請購紀錄明細 = relationship("請購紀錄明細", back_populates="物料")
+    供應商 = relationship("供應商", back_populates="物料")
+    

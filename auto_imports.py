@@ -14,11 +14,11 @@ def generate_app_initFiles():
         priority = []
 
         if os.path.exists(priority_config_path):
-            with open(priority_config_path, 'r') as file:
+            with open(priority_config_path, 'r', encoding='utf-8') as file:
                 for line in file:
                     priority.append('app.' + directory + line.strip())
 
-        with open(app_init_file, 'a') as file:
+        with open(app_init_file, 'a', encoding='utf-8') as file:
             for module_path in priority:
                 file.write(f'from {module_path} import *\n')
 

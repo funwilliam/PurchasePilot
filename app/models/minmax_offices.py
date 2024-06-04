@@ -1,13 +1,17 @@
 from app.models.base import Base, db
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, DateTime, func
 from sqlalchemy.orm import relationship
 
-class Office(db.Model):
-    __tablename__ = 'minmax_offices'
+class 捷拓廠區(db.Model):
+    __tablename__ = '捷拓廠區'
 
-    office_id = Column(String, primary_key=True, comment='地址碼')
-    office_name = Column(String, nullable=False, unique=True, comment='地點名稱')
-    address = Column(String, nullable=False, unique=True, comment='地址')
+    廠區名稱 = Column(String, primary_key=True)
+    地址碼 = Column(String, nullable=False, unique=True)
+    地址 = Column(String, nullable=False, unique=True)
 
-    # 建立到 Request 的關聯
-    requests = relationship("Request", back_populates="minmax_offices")
+    創建時間戳 = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    更新時間戳 = Column(DateTime(timezone=True), onupdate=func.now())
+    刪除時間戳 = Column(DateTime(timezone=True))
+
+    # 建立到 請購紀錄明細 的關聯
+    請購紀錄明細 = relationship("請購紀錄明細", back_populates="捷拓廠區")

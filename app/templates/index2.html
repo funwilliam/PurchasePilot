@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>物料請購表單</title>
+<style>
+  body {
+    font-family: 'Microsoft JhengHei', Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+  }
+  .form-container {
+    background-color: #fff;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    width: 800px;
+  }
+  .form-header {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    border-radius: 5px 5px 0 0;
+  }
+  .form-group {
+    margin-bottom: 10px;
+  }
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+  }
+  .form-group input[type="text"],
+  .form-group select,
+  .form-group input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  .form-group button,
+  .form-group a {
+    background-color: #dc3545;
+    color: white;
+    padding: 10px 15px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .form-group button:hover,
+  .form-group a:hover {
+    background-color: #c82333;
+  }
+  .button-group {
+    margin-top: 10px;
+  }
+  .blue-link-button {
+    background-color: #007bff;
+  }
+  .blue-link-button:hover {
+    background-color: #0056b3;
+  }
+  .red-button {
+    background-color: #dc3545;
+  }
+  .red-button:hover {
+    background-color: #c82333;
+  }
+  .form-row {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .form-row > .form-group {
+    flex: 1;
+    min-width: 250px;
+  }
+  .wide-field {
+    flex: 2;
+  }
+  .form-footer {
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+
+<div class="form-container">
+  <div class="form-header">
+    <h2>物料請購表單</h2>
+  </div>
+
+  <form action="/submit-your-form-link" method="post">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="applicant">申請人</label>
+        <input type="text" id="applicant" name="applicant">
+      </div>
+      <div class="form-group">
+        <label for="addressCode">地址碼</label>
+        <select id="addressCode" name="addressCode">
+          <!-- Options for addressCode -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="requestDate">請購日期</label>
+        <input type="date" id="requestDate" name="requestDate">
+      </div>
+      <div class="form-group">
+        <label for="requireDate">需求日期</label>
+        <input type="date" id="requireDate" name="requireDate">
+      </div>
+      <div class="form-group">
+        <label for="computerNumber">電腦編號</label>
+        <input type="text" id="computerNumber" name="computerNumber">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="supplier">供應商簡稱</label>
+        <select id="supplier" name="supplier">
+          <!-- Options for supplier -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="vendorNumber">廠商編號</label>
+        <input type="text" id="vendorNumber" name="vendorNumber">
+      </div>
+      <div class="form-group">
+        <label for="quantity">數量</label>
+        <input type="text" id="quantity" name="quantity">
+      </div>
+      <div class="form-group">
+        <label for="reasonForRequest">請購原由</label>
+        <select id="reasonForRequest" name="reasonForRequest">
+          <!-- Options for reasonForRequest -->
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="category">類別</label>
+        <select id="category" name="category">
+          <!-- Options for category -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="project">專案</label>
+        <select id="project" name="project">
+          <!-- Options for project -->
+        </select>
+      </div>
+      <div class="form-group wide-field">
+        <label for="usage">用途說明</label>
+        <input type="text" id="usage" name="usage">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group wide-field">
+        <label for="remarks">備註</label>
+        <input type="text" id="remarks" name="remarks">
+      </div>
+      <div class="form-group">
+        <label for="databasePrice">建檔資料庫內單價</label>
+        <input type="text" id="databasePrice" name="databasePrice">
+      </div>
+      <div class="form-group">
+        <label for="number">編號</label>
+        <input type="text" id="number" name="number">
+      </div>
+    </div>
+
+    <div class="form-group button-group">
+      <button type="button" class="red-button">前一筆</button>
+      <button type="button" class="red-button">後一筆</button>
+      <button type="button" class="red-button">最後一筆</button>
+      <button type="button" class="red-button">儲存</button>
+      <button type="button" class="red-button">刪除</button>
+      <a href="/engineering-request-section" class="blue-link-button">工程請購專區</a>
+      <a href="/supplier-material-number-search" class="blue-link-button">供應商料品料號查詢</a>
+      <a href="/last-purchase-date-and-price-query" class="blue-link-button">上次購買日期及單價查詢</a>
+    </div>
+    
+    <div class="form-footer">
+      <!-- Footer content if needed -->
+    </div>
+  </form>
+</div>
+
+</body>
+</html>

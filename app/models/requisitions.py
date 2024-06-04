@@ -1,14 +1,16 @@
 from app.models.base import Base, db
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, func
 from sqlalchemy.orm import relationship
 
-class Requisition(db.Model):
-    __tablename__ = 'purchase_requisitions'
+class 資材部請購單(db.Model):
+    __tablename__ = '資材部請購單'
 
-    id = Column(String, primary_key=True, comment='資材部請購單號')
-    ATD_at = Column(DateTime(timezone=True), comment='送單時間戳')
-    status = Column(String, comment='請購單狀態')
-    status_updated_at = Column(DateTime(timezone=True), comment='狀態更新時間戳')
+    單號 = Column(String, primary_key=True)
+    請購單狀態 = Column(String)
+    狀態更新時間戳 = Column(DateTime(timezone=True))
 
-    # 建立到 Request 的關聯
-    requests = relationship("Request", back_populates="purchase_requisitions")
+    創建時間戳 = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    刪除時間戳 = Column(DateTime(timezone=True))
+
+    # 建立到 請購紀錄明細 的關聯
+    請購紀錄明細 = relationship("請購紀錄明細", back_populates="資材部請購單")

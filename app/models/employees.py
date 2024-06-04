@@ -2,17 +2,19 @@ from app.models.base import Base, db
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 
-class Employee(db.Model):
-    __tablename__ = 'employees'
+class 員工(db.Model):
+    __tablename__ = '員工'
 
-    id = Column(Integer, primary_key=True, comment='默認遞增主鍵')
-    short_num = Column(String, nullable=False, unique=True, comment='工號簡碼')
-    full_num = Column(String, nullable=False, unique=True, comment='工號全碼')
-    name = Column(String, nullable=False, comment='姓名')
-    email = Column(String, nullable=False, unique=True, comment='公司信箱')
-    card_num = Column(String, comment='員工卡號')
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, comment='建檔時間戳')
-    deleted_at = Column(DateTime(timezone=True), comment='軟刪除時間戳')
+    默認主鍵 = Column(Integer, primary_key=True, autoincrement=True)
+    工號簡碼 = Column(String, nullable=False, unique=True)
+    工號全碼 = Column(String, nullable=False, unique=True)
+    姓名 = Column(String, nullable=False)
+    信箱 = Column(String, nullable=False, unique=True)
+    員工卡號 = Column(String, unique=True)
 
-    # 建立到 Request 的關聯
-    requests = relationship("Request", back_populates="employees")
+    創建時間戳 = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    更新時間戳 = Column(DateTime(timezone=True), onupdate=func.now())
+    刪除時間戳 = Column(DateTime(timezone=True))
+
+    # 建立到 請購紀錄明細 的關聯
+    請購紀錄明細 = relationship("請購紀錄明細", back_populates="申請人")

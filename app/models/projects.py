@@ -1,16 +1,21 @@
 from app.models.base import Base, db
-from sqlalchemy import Column, Integer, Boolean, String, Text, DateTime, func
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 
-class Project(db.Model):
-    __tablename__ = 'ed_projects'
+class 專案(db.Model):
+    __tablename__ = '專案'
 
-    id = Column(Integer, primary_key=True, comment='默認遞增主鍵')
-    launch_year = Column(String, comment='專案啟動年份')
-    project_name = Column(String, nullable=False, unique=True, comment='專案名稱')
-    remarks = Column(Text, comment='備註')
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, comment='建檔時間戳')
-    is_active = Column(Boolean, server_default= 'true', comment='進行中/結案')
+    默認主鍵 = Column(Integer, primary_key=True, autoincrement=True)
+    專案名稱 = Column(String, nullable=False, unique=True)
+    啟動年份 = Column(String)
+    負責人工號簡碼 = Column(String, ForeignKey('員工.工號簡碼'))
+    備註 = Column(Text)
+    專案狀態 = Column(String, nullable=False, server_default= '進行中') # 進行中/結案維護/廢棄
+    狀態更新時間戳 = Column(DateTime(timezone=True))
 
-    # 建立到 Request 的關聯
-    requests = relationship("Request", back_populates="ed_projects")
+    創建時間戳 = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    更新時間戳 = Column(DateTime(timezone=True), onupdate=func.now())
+    刪除時間戳 = Column(DateTime(timezone=True))
+
+    # 建立到 請購紀錄明細 的關聯
+    請購紀錄明細 = relationship("請購紀錄明細", back_populates="專案")
