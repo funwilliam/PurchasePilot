@@ -7,7 +7,7 @@ class 捷拓廠區(db.Model):
 
     廠區名稱 = Column(String, primary_key=True)
     地址碼 = Column(String, nullable=False, unique=True)
-    地址 = Column(String, nullable=False, unique=True)
+    地址 = Column(String)
 
     創建時間戳 = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     更新時間戳 = Column(DateTime(timezone=True), onupdate=func.now())

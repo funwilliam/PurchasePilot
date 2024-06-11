@@ -9,7 +9,7 @@ class 員工(db.Model):
     工號簡碼 = Column(String, nullable=False, unique=True)
     工號全碼 = Column(String, nullable=False, unique=True)
     姓名 = Column(String, nullable=False)
-    信箱 = Column(String, nullable=False, unique=True)
+    信箱 = Column(String)
     員工卡號 = Column(String, unique=True)
 
     創建時間戳 = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

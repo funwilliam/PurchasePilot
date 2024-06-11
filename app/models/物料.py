@@ -9,11 +9,11 @@ class 物料(db.Model):
     物料代號 = Column(String, nullable=False)
     供應商簡稱 = Column(String, ForeignKey('供應商.簡稱'))
     品名規格 = Column(String, nullable=False)
-    預設物料類別 = Column(String, ForeignKey('物料類別.類別'), nullable=False) # 請購單有實際物料類別欄。
     單價 = Column(Float, nullable=False)
-    單位 = Column(String, ForeignKey('單位.單位名稱'), nullable=False) # 外鍵確保單位統一
-    幣別 = Column(String, ForeignKey('幣別.代號'), nullable=False) # 外鍵確保幣別統一
+    幣別 = Column(String, nullable=False)
+    單位 = Column(String, nullable=False)
     預設收貨廠區 = Column(String, ForeignKey('捷拓廠區.廠區名稱'), nullable=False) # 資材部建檔與物料管理用，未來可能棄用。請購單有實際收貨地址欄。
+    預設物料類別 = Column(String, ForeignKey('物料類別.類別')) # 請購單有實際物料類別欄。
     
     報價單路徑 = Column(String)
     報價單有效期限 = Column(DateTime(timezone=True))
