@@ -2,15 +2,14 @@ import os
 import dotenv
 from flask import Flask
 from flask_migrate import Migrate
-from app import utils, db, home as home_blueprint
+from app import utils, db, home as home_blueprint, api as api_blueprint
 
 dotenv.load_dotenv()
 
-
 def create_app():
-    app = Flask(__name__, template_folder='app/templates',
-                static_folder='app/static')
-    app.register_blueprint(home_blueprint)
+    app = Flask(__name__, template_folder='app/templates', static_folder='app/static')
+    app.register_blueprint(home_blueprint, url_prefix='')
+    app.register_blueprint(api_blueprint, url_prefix='/api')
     # app.config['SQLALCHEMY_DATABASE_URI'] = utils.make_postgresql_DBURL(
     #     os.getenv('DB_USER'),       # type: ignore
     #     os.getenv('DB_PASSWORD'),   # type: ignore
@@ -26,7 +25,6 @@ def create_app():
     Migrate(app, db)
 
     return app
-
 
 if __name__ == '__main__':
     app = create_app()

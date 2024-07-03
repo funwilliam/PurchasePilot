@@ -1,4 +1,4 @@
-from app.models.base import Base, db
+from app.models.base import db
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 
@@ -17,5 +17,5 @@ class 專案(db.Model):
     更新時間戳 = Column(DateTime(timezone=True), onupdate=func.now())
     刪除時間戳 = Column(DateTime(timezone=True))
 
-    # 建立到 請購紀錄明細 的關聯
-    請購紀錄明細 = relationship("請購紀錄明細", back_populates="專案")
+    # 建立到 請購明細 的關聯
+    請購明細 = relationship("請購明細", back_populates="專案", primaryjoin="請購明細.專案名稱 == 專案.專案名稱", foreign_keys="[請購明細.專案名稱]")

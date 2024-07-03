@@ -1,0 +1,1119 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            font-family: Jost, "Microsoft JhengHei", 微軟正黑體, 微软雅黑, sans-serif, 'Noto Sans TC', -apple-system, Arial, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Source Han Sans CN', 'Source Han Sans SC', 'Microsoft YaHei', 'WenQuanYi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;
+        }
+
+        .container {
+            max-width: 800px;
+        }
+
+        .transparent-label {
+            color: transparent;
+        }
+
+        .transparent-border {
+            border-color: transparent;
+        }
+
+        .editedFileName {
+            border: none;
+        }
+
+        .fileBox {
+            width: 100px;
+            height: 100px;
+        }
+
+        .file-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 0.5rem;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
+    </style>
+
+    <title>工程部-物料創建&資訊更新表單</title>
+</head>
+
+<body class="bg-light">
+    <div class="container">
+        <header class="m-2"></header>
+        <main class="px-1 pt-1 pb-4 bg-white rounded-top-3 shadow">
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn p-0" style="width: 50px; height: 50px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                        class="w-50 h-50 bi bi-reply-fill text-secondary" viewBox="0 0 16 16" style="opacity: .45;">
+                        <path
+                            d="M5.921 11.9 1.353 8.62a.72.72 0 0 1 0-1.238L5.921 4.1A.716.716 0 0 1 7 4.719V6c1.5 0 6 0 7 8-2.5-4.5-7-4-7-4v1.281c0 .56-.606.898-1.079.62z" />
+                    </svg>
+                </button>
+            </div>
+            <form id="material-form" autocomplete="off">
+                <fieldset class="mx-5 my-2">
+                    <div class="text-center mb-4">
+                        <img src="{{ url_for('static', filename='images/banner.png') }}" alt="Banner"
+                            class="img-fluid rounded">
+                    </div>
+                    <h3 class="p-2 text-start fw-bolder rounded-2" style="letter-spacing: 0.4rem;">
+                        工程部物料創建&資訊更新表單 (內部)
+                    </h3>
+                    <hr class="my-4">
+                    <div class="row mb-3 align-items-stretch">
+                        <div class="col-6">
+                            <div class="m-2 p-1">
+                                <div class="d-flex align-items-center">
+                                    <label for="Input_applier" class="form-label">申請人</label>
+                                    <button type="button"
+                                        class="btn form-label p-0 ms-2 border-0 text-danger clr-input-btn d-none align-items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            fill="currentColor" class="bi bi-eraser-fill m-0 p-0 pe-none"
+                                            viewBox="0 0 16 16">
+                                            <path class="pe-none"
+                                                d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828zm.66 11.34L3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <input type="text" class="form-control" id="Input_applier" placeholder="工號簡碼 = 001"
+                                    list="employee_datalist">
+                                <datalist id="employee_datalist"></datalist>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="m-2 p-1">
+                                <p>表單模式</p>
+                                <div id="radioContainer" class="d-flex flex-row">
+                                    <div class="form-check">
+                                        <input class="form-check-input pe-none" type="radio" name="form-mode-group"
+                                            id="createOption" value="創建" checked>
+                                        <label class="form-check-label pe-none" for="createOption">創建</label>
+                                    </div>
+                                    <div class="mx-2"></div>
+                                    <div class="form-check">
+                                        <input class="form-check-input pe-none" type="radio" name="form-mode-group"
+                                            id="updateOption" value="更新">
+                                        <label class="form-check-label pe-none" for="updateOption">更新</label>
+                                    </div>
+                                    <div class="mx-2"></div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="isSubmitToExtDep" checked>
+                                        <label class="form-check-label" for="isSubmitToExtDep">遞交資材部</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <div class="row mb-3 align-items-stretch">
+                        <div class="col-6">
+                            <div class="m-2 p-1">
+                                <div class="d-flex align-items-center">
+                                    <label for="Input_supplier" class="form-label">供應商</label>
+                                    <button type="button"
+                                        class="btn form-label p-0 ms-2 border-0 text-danger clr-input-btn d-none align-items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            fill="currentColor" class="bi bi-eraser-fill m-0 p-0 pe-none"
+                                            viewBox="0 0 16 16">
+                                            <path class="pe-none"
+                                                d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828zm.66 11.34L3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <input type="text" class="form-control" id="Input_supplier" list="supplier_datalist">
+                                <datalist id="supplier_datalist"></datalist>
+                            </div>
+                        </div>
+                        <div class="col-6 d-flex flex-column">
+                            <div class="m-2 p-1">
+                                <div class="d-flex align-items-center">
+                                    <label for="Input_materialId" class="form-label">料號</label>
+                                    <button type="button"
+                                        class="btn form-label p-0 ms-2 border-0 text-danger clr-input-btn d-none align-items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            fill="currentColor" class="bi bi-eraser-fill m-0 p-0 pe-none"
+                                            viewBox="0 0 16 16">
+                                            <path class="pe-none"
+                                                d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828zm.66 11.34L3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <input type="text" class="form-control" id="Input_materialId" list="material_datalist">
+                                <datalist id="material_datalist"></datalist>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <div class="m-2 p-1">
+                        <div class="d-flex align-items-center">
+                            <label for="Input_partName" class="form-label">品名</label>
+                            <button type="button"
+                                class="btn form-label p-0 ms-2 border-0 text-danger clr-input-btn d-none align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-eraser-fill m-0 p-0 pe-none" viewBox="0 0 16 16">
+                                    <path class="pe-none"
+                                        d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828zm.66 11.34L3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <input type="text" class="form-control" id="Input_partName">
+                    </div>
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="m-1 p-2">
+                                <label for="Input_unitPrice" class="form-label">單價</label>
+                                <input type="number" class="form-control" id="Input_unitPrice" min="0" step="any" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="m-1 p-2">
+                                <label for="Input_currency" class="form-label">幣別</label>
+                                <select id="Input_currency" class="form-select" aria-label="Default select example">
+                                    <option selected>Open this select menu</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="m-1 p-2">
+                                <label for="Input_unit" class="form-label">單位</label>
+                                <select id="Input_unit" class="form-select" aria-label="Default select example">
+                                    <option selected>Open this select menu</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="m-2 p-1">
+                        <label for="Input_materialType" class="form-label">預設物料類別</label>
+                        <select id="Input_materialType" class="form-select" aria-label="Default select example">
+                            <option selected>Open this select menu</option>
+                        </select>
+                    </div>
+                    <div class="m-2 p-1">
+                        <label for="Input_delieveryOffice" class="form-label">預設收貨廠區</label>
+                        <select id="Input_delieveryOffice" class="form-select" aria-label="Default select example">
+                            <option selected>Open this select menu</option>
+                        </select>
+                    </div>
+                    <div class="m-2 p-1">
+                        <label for="Input_files" class="form-label" style="cursor: pointer;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                class="bi bi-plus-circle pe-none" viewBox="0 0 16 16">
+                                <path class="pe-none"
+                                    d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                                <path class="pe-none"
+                                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                            </svg>
+                            報價單
+                        </label>
+                        <input type="file" id="Input_files" style="display: none;">
+                        <div id="fileList" class="w-100"></div>
+                    </div>
+                </fieldset>
+                <div class="d-flex justify-content-center">
+                    <button type="submit" class="btn btn-lg btn-primary rounded-3">提交</button>
+                </div>
+            </form>
+        </main>
+        <footer class="my-5 text-muted text-center text-small"></footer>
+    </div>
+    <!-- Modal 結構: 彈窗預覽檔案 -->
+    <div class="modal fade" id="filePreviewModal" tabindex="-1" aria-labelledby="filePreviewModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filePreviewModalLabel">文件預覽</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <iframe id="filePreviewIframe" width="100%" height="600px"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/danfojs@1.1.2/lib/bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script>
+        (() => {
+            const resourceName_get = [
+                'suppliers',            // 供應商表
+                'units',                // 單位表
+                'currencies',           // 幣別表
+                'employees',            // 員工表
+                'minmaxOffice',         // 捷拓廠區表
+                'materialType',         // 物料種類表
+                'materials',            // 物料表
+            ];
+
+            const dataFrame = {};
+
+            let fileBuffer = {};
+
+            let fileBuffer_ptr = 0;
+
+            let formMode = '';
+
+            let dataExchangingRegistList = {};
+
+            // 定義物料模板創建函數
+            function createMaterialBuffer() {
+                return {
+                    申請人工號簡碼: '',
+                    供應商簡稱: '',
+                    物料代號: '',
+                    品名規格: '',
+                    單價: 0,
+                    幣別: '',
+                    單位: '',
+                    預設收貨廠區: '',
+                    預設物料類別: '',
+                    報價單檔案主鍵: '',
+                    通知資材: true
+                };
+            }
+
+            // 定義檔案資訊模板創建函數
+            function createFileBuffer() {
+                return {
+                    默認主鍵: '',
+                    內容分類: '報價單',
+                    檔案說明: '',
+                    副檔名: '',
+                    檔案路徑: '',
+                    哈希值: '',
+                    ext: {
+                        檔案: null,
+                        檔案種類: '',
+                        圖示bs: '',
+                        圖示顏色: '',
+                        預覽檔案: null,
+                        預覽檔案狀態: 'init',
+                    }
+                };
+            }
+
+            // 用以讀取主要相依資源
+            function fetchResource(resourceName) {
+                const url = new URL(`/api/${resourceName}`, window.location.origin);
+                return fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        dataFrame[resourceName] = new dfd.DataFrame(data);
+                        // console.log(`Fetched ${resourceName}`);
+                    })
+                    .catch(error => console.error(`Error fetching ${resourceName}:`, error));
+            }
+
+            // 檢查檔案是否存在檔案管理系統
+            async function checkFileExistence({ primeKey = null, hash = null } = {}) {
+                try {
+                    // 創建URL對象，基於當前頁面的根URL
+                    const url = new URL('/api/files/checkFileExistence', window.location.origin);
+
+                    // 根據條件添加查詢參數
+                    if (primeKey) {
+                        url.searchParams.append('primeKey', primeKey);
+                    } else if (hash) {
+                        url.searchParams.append('hash_SHA256', hash);
+                    } else {
+                        throw new Error('不明的查詢條件');
+                    }
+
+                    // 發送GET請求
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error);
+                    return data;
+                } catch (error) {
+                    console.error('Error: 檢查檔案是否存在伺服器失敗\n' + error);
+                    alert('檢查檔案是否存在伺服器失敗:' + error);
+                    return null;
+                }
+            }
+
+            // 從後端取得檔案
+            async function fetchAttachment(primeKey) {
+                try {
+                    // 創建URL對象，基於當前頁面的根URL
+                    const url = new URL(`/api/files/${primeKey}`, window.location.origin);
+                    const response = await fetch(url);
+                    const contentType = response.headers.get('Content-Type');
+
+                    // 根據本api的設定，json格式是報錯時才會回傳，檔案回傳由後端自動判斷mimetype。
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        if (data.error) throw new Error(data.error);
+                        else throw new Error('Unknown error in JSON response');
+                    } else if (contentType) {
+                        let blob = await response.blob();
+                        let contentDisposition = response.headers.get('Content-Disposition');
+                        let filename = '原檔名遺失';
+                        if (contentDisposition) {
+                            // 優先處理 filename* (RFC 5987 格式編碼，可以解析中文)
+                            let match = contentDisposition.match(/filename\*=(?:UTF-8'')?([^;\n]*)/);
+                            if (match && match[1]) {
+                                filename = decodeURIComponent(match[1].replace(/['"]/g, ''));
+                            } else {
+                                // 處理 filename (無法解析中文)
+                                match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                                if (match && match[1]) {
+                                    filename = match[1].replace(/['"]/g, '');
+                                }
+                            }
+                        }
+                        return new File([blob], filename, { type: contentType });
+                    } else
+                        throw new Error('Unknown response type');
+                } catch (error) {
+                    console.error('Error: 傳輸伺服器附件時發生錯誤\n' + error);
+                    alert('傳輸伺服器附件時發生錯誤：' + error.message);
+                    return null;
+                }
+            }
+
+            // 上傳物料報價單
+            async function uploadAttachment(formData) {
+                try {
+                    const url = new URL('/api/files', window.location.origin);
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        return {'status': '上傳成功', 'message': data.message, 'id': data.id, 'path': data.path};
+                    } else {
+                        throw new Error(data.error);
+                    }
+                    
+                    return data;
+                } catch (error) {
+                    console.error('Error: 上傳附件失敗\n' + error.message);
+                    alert('檔案上傳失敗，請聯繫管理員：\n' + error.message);
+                    return {'status': '上傳失敗', 'message': error.message, 'id': null, 'path': null};
+                }
+            }
+
+            // 建立伺服器暫存
+            async function cacheAttachment(formData) {
+                formData.append('快取', true);
+                return await uploadAttachment(formData);
+            }
+
+            // 更新附件元數據
+            async function updateAttachmentMeta(formData, primeKey) {
+                try {
+                    const url = new URL(`/api/files/${primeKey}`, window.location.origin);
+                    const response = await fetch(url, {
+                        method: 'PATCH',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        let message = [];
+                        Object.entries(data.updatedFields).forEach(([key, value]) => key!='快取' && message.push(`${key}: ${value[0] || 'NULL'} -> ${value[1] || 'NULL'}`));
+                        return {'status': '更新成功', 'message': `附件元數據更新成功！\n已更新的欄位信息:\n${message.join('\n')}`};
+                    } else {
+                        throw new Error(data.error);
+                    }
+                    return data;
+                } catch (error) {
+                    console.error('Error: 更新附件元數據失敗\n' + error.message);
+                    return {'status': '更新失敗', 'message': '附件元數據更新失敗！\n' + error.message};
+                }
+            }
+
+            // 轉檔為可以預覽的pdf檔
+            async function convertToPreviewFile(formData) {
+                try {
+                    const url = new URL('/api/convert', window.location.origin);
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const contentType = response.headers.get('Content-Type');
+                    if (contentType && contentType.includes('application/pdf')) {
+                        let previewFile = await response.blob();
+                        return previewFile;
+                    } else if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        if (data.error) throw new Error(data.error);
+                        else throw new Error('Unknown error in JSON response');
+                    } else
+                        throw new Error('Unknown response type');
+                } catch (error) {
+                    console.error('Error: 轉換為 PDF 時發生錯誤\n' + error);
+                    alert('轉換為 PDF 時發生錯誤：' + error.message);
+                    return null;
+                }
+            }
+
+            // 上傳物料創建/更新
+            async function uploadMaterial(materialFormValues) {
+                try {
+                    const url = new URL('/api/materials', window.location.origin);
+                    const response = await fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(materialFormValues)
+                    });
+                    
+                    if (response.status === 204) {
+                        return {'status': '無異動', 'message': '物料信息與資料庫一致！'};
+                    }
+
+                    const data = await response.json();
+                    if (response.ok) {
+                        let message = [];
+                        Object.entries(data.updatedFields).forEach(([key, value]) => message.push(`${key}: ${value[0] || 'NULL'} -> ${value[1] || 'NULL'}`));
+                        return {'status': '更新成功', 'message': `物料信息更新成功！\n已更新的欄位信息:\n${message.join('\n')}`};
+                    } else {
+                        let error = `Error message: ${data.message}\nRequired Fields:\n${data.required_fields.join('\n')}`;
+                        console.error(error);
+                        return {'status': '更新失敗', 'message': `物料信息更新失敗！\n${error}`};
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    return {'status': '更新失敗', 'message': `物料信息更新失敗！\n${error.message}`};
+                }
+            }
+
+            // 重新導向至請購表單
+            function redirectToPurchaseReqForm(type) {
+                
+            }
+
+            // 截取當前表單內容
+            function getFormValues() {
+                const materialFormValues = createMaterialBuffer();
+
+                materialFormValues.申請人工號簡碼 = document.getElementById('Input_applier').value || null;
+                materialFormValues.供應商簡稱 = document.getElementById('Input_supplier').value || null;
+                materialFormValues.物料代號 = document.getElementById('Input_materialId').value || null;
+                materialFormValues.品名規格 = document.getElementById('Input_partName').value || null;
+                materialFormValues.單價 = document.getElementById('Input_unitPrice').value || null;
+                materialFormValues.幣別 = document.getElementById('Input_currency').value || null;
+                materialFormValues.單位 = document.getElementById('Input_unit').value || null;
+                materialFormValues.預設物料類別 = document.getElementById('Input_materialType').value || null;
+                materialFormValues.預設收貨廠區 = document.getElementById('Input_delieveryOffice').value || null;
+                materialFormValues.通知資材 = document.getElementById('isSubmitToExtDep').checked || null;
+
+                return materialFormValues
+            }
+
+            // 檢查表單內容是否符合規範，回傳警告
+            function checkFormValues(materialFormValues) {
+                let warnings = [];
+
+                !(materialFormValues.申請人工號簡碼) && warnings.push('- 沒寫修改者');
+                !(materialFormValues.供應商簡稱) && warnings.push('- 沒寫供應商');
+                !(materialFormValues.物料代號) && warnings.push('- 沒寫料號');
+                !(materialFormValues.品名規格) && warnings.push('- 沒寫品名規格');
+                !(materialFormValues.單價) && warnings.push('- 沒寫單價');
+                !(materialFormValues.幣別) && warnings.push('- 沒寫幣別');
+                !(materialFormValues.單位) && warnings.push('- 沒寫單位');
+                !(materialFormValues.預設收貨廠區) && warnings.push('- 沒寫預設收貨廠區');
+
+                return warnings;
+            }
+
+            // 送出表單
+            async function submitMaterialForm(event) {
+                event && event.preventDefault();
+
+                // 讀取表單內容
+                materialFormValues = getFormValues();
+
+                // 檢查表單內容
+                checkResult = checkFormValues(materialFormValues);
+                if (checkResult && checkResult.length > 0) {
+                    console.log('表單內容檢查異常:\n' + checkResult.join('\n'));
+                    alert('表單內容檢查異常:\n' + checkResult.join('\n'));
+                    return false;
+                }
+
+                // 檢查檔案緩存區。物料新增/修改頁面內，應只包含一個附件作為報價單。
+                const entries = Object.entries(fileBuffer);
+                const [ptr, buffer] = entries.length === 1 ? entries[0] : [];
+
+                // 粗糙的檔案傳輸檢查，如果需要完整檢查，請於將來完成傳輸狀態註冊表dataExchangingRegister()相關實作。
+                if (buffer && buffer.ext.預覽檔案狀態 === 'loading') {
+                    alert('待數據傳輸完成後，請再次嘗試提交');
+                    return false;
+                }
+
+                if (buffer && buffer.默認主鍵) {
+                    const checkFileExistenceReturn = await checkFileExistence({primeKey: buffer.默認主鍵});
+                    if (checkFileExistenceReturn && checkFileExistenceReturn.found) {
+                        const formData = new FormData();
+                        let uploadMaterialReturn;
+                        let updateAttachmentMetaReturn;
+                        let changeFlag = false;
+
+                        // 上傳物料表單
+                        materialFormValues.報價單檔案主鍵 = buffer.默認主鍵;
+                        uploadMaterialReturn = await uploadMaterial(materialFormValues);
+
+                        if (uploadMaterialReturn.status === '更新失敗') alert(uploadMaterialReturn.message);
+                        
+                        // 更新附件元數據
+                        if (checkFileExistenceReturn.檔案說明 && checkFileExistenceReturn.檔案說明 !== buffer.檔案說明) {
+                            formData.append('檔案說明', buffer.檔案說明);
+                            changeFlag = true;
+                        }
+                        if (checkFileExistenceReturn.內容分類 && checkFileExistenceReturn.內容分類 !== buffer.內容分類) {
+                            formData.append('內容分類', buffer.內容分類);
+                            changeFlag = true;
+                        }
+                        if (checkFileExistenceReturn.副檔名 && checkFileExistenceReturn.副檔名 !== buffer.副檔名) {
+                            formData.append('副檔名', buffer.副檔名);
+                            changeFlag = true;
+                        }
+                        if (checkFileExistenceReturn.快取) {
+                            formData.append('快取', false);
+                            changeFlag = true;
+                        }
+                        
+                        if (changeFlag) {
+                            updateAttachmentMetaReturn =  await updateAttachmentMeta(formData, buffer.默認主鍵);
+                            alert(`${uploadMaterialReturn.message}\n\n${updateAttachmentMetaReturn.message}`);
+                        } else {
+                            alert(uploadMaterialReturn.message);
+                        }                        
+                    } else if (buffer.ext.檔案) {
+                        const attachmentForm = new FormData();
+                        attachmentForm.append('file', buffer.ext.檔案);
+                        attachmentForm.append('內容分類', buffer.內容分類);
+                        attachmentForm.append('檔案說明', buffer.檔案說明);
+                        attachmentForm.append('副檔名', buffer.副檔名);
+                        attachmentForm.append('哈希值', buffer.哈希值);
+                        const primeKey = await uploadAttachment(attachmentForm).id;
+                        if (primeKey) {
+                            materialFormValues.報價單檔案主鍵 = primeKey;
+                            let uploadMaterialReturn = await uploadMaterial(materialFormValues);
+                            alert(uploadMaterialReturn.message);
+                        }
+                    }
+                } else if (buffer && buffer.ext.檔案) {
+                    const attachmentForm = new FormData();
+                    attachmentForm.append('file', buffer.ext.檔案);
+                    attachmentForm.append('內容分類', buffer.內容分類);
+                    attachmentForm.append('檔案說明', buffer.檔案說明);
+                    attachmentForm.append('副檔名', buffer.副檔名);
+                    attachmentForm.append('哈希值', buffer.哈希值);
+                    const primeKey = await uploadAttachment(attachmentForm).id;
+                    if (primeKey) {
+                        materialFormValues.報價單檔案主鍵 = primeKey;
+                        let uploadMaterialReturn = await uploadMaterial(materialFormValues);
+                        alert(uploadMaterialReturn.message);
+                    }
+                } else {
+                    let uploadMaterialReturn = await uploadMaterial(materialFormValues);
+                    alert(uploadMaterialReturn.message);
+                }
+
+                window.location.reload();
+            }
+
+            // 資料交換註冊表
+            function dataExchangingRegister({operation = null, pid = null} = {}) {
+                if (operation === 'add') {
+                    dataExchangingRegistList[pid] = Date.now();
+                } else if (operation === 'pop' &&  pid) {
+                    delete dataExchangingRegistList[pid];
+                }
+            }
+
+            // 為指定的 <select> OR <datalist> 設置選項，首先清除所有現有選項，然後添加一個預設選項和選項清單
+            function setupSelectOptions(selector, list, hasEmptyOption = false) {
+                // 清除 selector 中的所有子節點
+                while (selector.firstChild) selector.removeChild(selector.firstChild);
+
+                // 創建並添加一個預設選項，該選項被禁用且被隱藏
+                const defaultOption = new Option('請選擇一個選項', '', true, true);
+                defaultOption.hidden = !hasEmptyOption;
+                selector.appendChild(defaultOption);
+
+                // 創建一個文檔片段
+                let fragment = document.createDocumentFragment();
+
+                // 遍歷清單元素，創建並添加選項
+                Array.from(new Set(list)).forEach(columnName => fragment.appendChild(new Option(columnName, columnName)));
+
+                // 將文檔片段中的所有選項一次性添加到 selector 中
+                selector.appendChild(fragment);
+            }
+
+            // 清除該區塊內<input>值
+            function clearTextbox(clickEvent) {
+                let input_el = clickEvent.target.parentElement.parentElement.querySelector('input');
+                input_el.value = '';
+                input_el.dispatchEvent(new Event('input', { bubbles: true }));
+                input_el.focus();
+            }
+
+            // 刪除指定鍵值已渲染的檔案UI物件與檔案緩存器
+            function deleteFileBuffer(key) {
+                document.getElementById(`fileCtrlBlock-${key}`).remove();
+                delete fileBuffer[key];
+            }
+
+            // 清空已渲染的檔案UI物件與檔案緩存器
+            function clearFileBuffer() {
+                const keys = Object.keys(fileBuffer);
+                keys.forEach(key => deleteFileBuffer(key));
+            }
+
+            // 針對d-flex物件的顯示/隱藏設定
+            function setDFlexElmVisibility(dflexElement, isVisible) {
+                if (isVisible) {
+                    dflexElement.classList.add('d-flex');
+                    dflexElement.classList.remove('d-none');
+                }
+                else {
+                    dflexElement.classList.add('d-none');
+                    dflexElement.classList.remove('d-flex');
+                }
+            }
+
+            // 設定清除快捷鍵是否顯示
+            function setEraseIconVisibility(inputEvent) {
+                let btn_el = inputEvent.target.parentElement.querySelector('button');
+                setDFlexElmVisibility(btn_el, inputEvent.target.value);
+            }
+
+            // 設置物料區輸入建議
+            function setMtrlInputOptions() {
+                const supplierNameInput = document.getElementById('Input_supplier').value;
+                const materialIdInput = document.getElementById('Input_materialId').value;
+                let isFreight = /freight/i.test(materialIdInput); // 判斷輸入值是否包含"freight"(運費)的flag
+
+                if (isFreight) {
+                    alert(
+                        '資材部定義，運費的料號統一設置為FREIGHT，故無法獨立為運費建立其他料號或修改品名、單價。\n' +
+                        '建議：\n' +
+                        '1. 請於請購表單填入運費的料號=FREIGHT，並選擇資材部已審核建檔的供應商\n' +
+                        '2. 如遇尚未與公司合作的供應商，請先向資材部申請建檔，取得廠商編號(例:0001)後於本系統新增該供應商\n' +
+                        '3. 如遇外幣計價的運費，現階段請您填單後向請購負責人提出特殊處理需求，負責人將協助您於ERP請購系統填寫正確幣別'
+                    );
+                    this.reset();
+                    return;
+                }
+
+                if (supplierNameInput) {
+                    let material_list = dataFrame.materials.loc({ rows: dataFrame.materials['供應商簡稱'].eq(supplierNameInput) })['物料代號'].values.slice();
+                    material_list = material_list.filter(item => !/freight/i.test(item)); // 強制移除運費選項
+                    setupSelectOptions(document.getElementById('material_datalist'), material_list);
+                }
+                else {
+                    let material_list = dataFrame.materials['物料代號'].values;
+                    material_list = material_list.filter(item => !/freight/i.test(item)); // 強制移除運費選項
+                    setupSelectOptions(document.getElementById('material_datalist'), material_list);
+                }
+
+                if (materialIdInput) {
+                    let supplier_list = dataFrame.materials.loc({ rows: dataFrame.materials['物料代號'].eq(materialIdInput) })['供應商簡稱'].values.slice();
+                    setupSelectOptions(document.getElementById('supplier_datalist'), supplier_list);
+                }
+                else {
+                    setupSelectOptions(document.getElementById('supplier_datalist'), dataFrame.suppliers['簡稱'].values);
+                }
+            }
+
+            // 淺拷貝新list並添加新元素
+            function getUpdatedList(originalList, newItem) {
+                let updatedList = originalList.slice();
+                updatedList.push(newItem);
+                return updatedList;
+            }
+
+            // 代入顯示物料資訊 or 物料資訊區塊重置為空白
+            function renderMrtlInfo(material) {
+                if (material) {
+                    // 確保被讀取的紀錄如果不相容預設選項，也將被擴充進入UI可選選項。
+                    
+                    //幣別選項擴充
+                    let currenciesList = dataFrame.currencies['代號'].values.includes(material['幣別'])
+                        ? dataFrame.currencies['代號'].values
+                        : getUpdatedList(dataFrame.currencies['代號'].values, material['幣別']);
+
+                    // 單位選項擴充
+                    let unitList = dataFrame.units['代碼'].values.includes(material['單位'])
+                        ? dataFrame.units['代碼'].values
+                        : getUpdatedList(dataFrame.units['代碼'].values, material['單位']);
+
+                    // 物料類別選項擴充
+                    let materialTypeList = dataFrame.materialType['類別'].values.includes(material['預設物料類別'])
+                        ? dataFrame.materialType['類別'].values
+                        : getUpdatedList(dataFrame.materialType['類別'].values, material['預設物料類別']);
+
+                    // 廠區選項擴充
+                    let delieveryOfficeList = dataFrame.minmaxOffice['廠區名稱'].values.includes(material['預設收貨廠區'])
+                        ? dataFrame.minmaxOffice['廠區名稱'].values
+                        : getUpdatedList(dataFrame.minmaxOffice['廠區名稱'].values, material['預設收貨廠區']);
+
+                    // 渲染更新選項
+                    setupSelectOptions(document.getElementById('Input_currency'), currenciesList);
+                    setupSelectOptions(document.getElementById('Input_unit'), unitList);
+                    setupSelectOptions(document.getElementById('Input_materialType'), materialTypeList);
+                    setupSelectOptions(document.getElementById('Input_delieveryOffice'), delieveryOfficeList);
+
+                    // render紀錄至UI
+                    document.getElementById('Input_partName').value = material['品名規格'] || '';
+                    document.getElementById('Input_unitPrice').value = material['單價'] || '';
+                    document.getElementById('Input_currency').value = material['幣別'] || '';
+                    document.getElementById('Input_unit').value = material['單位'] || '';
+                    document.getElementById('Input_materialType').value = material['預設物料類別'] || '';
+                    document.getElementById('Input_delieveryOffice').value = material['預設收貨廠區'] || '';
+
+                    // 清空已渲染的檔案UI物件與檔案緩存器，再從伺服器載入報價單檔案
+                    if (material['報價單檔案主鍵']) {
+                        fetchAttachment(material['報價單檔案主鍵'])
+                            .then(file => {
+                                clearFileBuffer();
+                                handleFiles([file]);
+                            });
+                    }
+                }
+                else {
+                    document.getElementById('Input_partName').value = '';
+                    document.getElementById('Input_unitPrice').value = '';
+                    document.getElementById('Input_currency').value = '';
+                    document.getElementById('Input_unit').value = '';
+                    document.getElementById('Input_materialType').value = '';
+                    document.getElementById('Input_delieveryOffice').value = '';
+
+                    setupSelectOptions(document.getElementById('Input_currency'), dataFrame.currencies['代號'].values);                 // 幣別
+                    setupSelectOptions(document.getElementById('Input_unit'), dataFrame.units['代碼'].values);                          // 單位
+                    setupSelectOptions(document.getElementById('Input_materialType'), dataFrame.materialType['類別'].values, true);     // 物料類別
+                    setupSelectOptions(document.getElementById('employee_datalist'), dataFrame.employees['工號簡碼'].values);           // 申請人
+                    setupSelectOptions(document.getElementById('Input_delieveryOffice'), dataFrame.minmaxOffice['廠區名稱'].values);    // 收貨廠區
+
+                    // 清空已渲染的檔案UI物件與檔案緩存器
+                    clearFileBuffer();
+                }
+            }
+
+            // 物料區塊輸入值變化狀態處理器
+            function handleMtrlSecStatus() {
+                setMtrlInputOptions();
+                searchMtrl();
+            }
+
+            // 表單模式變，並繪製對應狀態
+            function handleFormModeChange(mode) {
+                formMode = mode;
+                if (mode === '創建') document.getElementById('createOption').checked = true;
+                if (mode === '更新') document.getElementById('updateOption').checked = true;
+                handleMtrlSecStatus();
+            }
+
+            // 查詢物料是否存在後，繪製對應狀態
+            function searchMtrl() {
+                const supplierNameInput = document.getElementById('Input_supplier').value;
+                const materialIdInput = document.getElementById('Input_materialId').value;
+
+                let query = dataFrame.materials.loc({ rows: dataFrame.materials['物料代號'].eq(materialIdInput).and(dataFrame.materials['供應商簡稱'].eq(supplierNameInput)) });
+                const material = query.shape[0] === 1 ? dfd.toJSON(query)[0] : null;
+
+                if (material && formMode === '創建') {
+                    handleFormModeChange('更新');
+                }
+                else if (material && formMode === '更新') {
+                    renderMrtlInfo(material);
+                }
+                else if (!material && formMode === '創建') {
+                    renderMrtlInfo(material);
+                }
+                else if (!material && formMode === '更新') {
+                    handleFormModeChange('創建');
+                }
+            }
+
+            // 以附檔名,apping到對應的icon設定
+            function getIconConf(extension) {
+                const fileDetails = {
+                    pdf: { icon: 'bi-file-earmark-pdf-fill', type: 'PDF', color: '#D32F2F' },               // Red
+                    doc: { icon: 'bi-file-earmark-word-fill', type: 'Word', color: '#1976D2' },             // Blue
+                    docx: { icon: 'bi-file-earmark-word-fill', type: 'Word', color: '#1976D2' },            // Blue
+                    xls: { icon: 'bi-file-earmark-spreadsheet-fill', type: 'Excel', color: '#388E3C' },     // Green
+                    xlsx: { icon: 'bi-file-earmark-spreadsheet-fill', type: 'Excel', color: '#388E3C' },    // Green
+                    ppt: { icon: 'bi-file-earmark-ppt-fill', type: 'PowerPoint', color: '#F57C00' },        // Orange
+                    pptx: { icon: 'bi-file-earmark-ppt-fill', type: 'PowerPoint', color: '#F57C00' },       // Orange
+                    jpg: { icon: 'bi-file-earmark-image-fill', type: 'Image', color: '#8E24AA' },           // Purple
+                    jpeg: { icon: 'bi-file-earmark-image-fill', type: 'Image', color: '#8E24AA' },          // Purple
+                    png: { icon: 'bi-file-earmark-image-fill', type: 'Image', color: '#8E24AA' },           // Purple
+                    gif: { icon: 'bi-file-earmark-image-fill', type: 'Image', color: '#8E24AA' },           // Purple
+                    bmp: { icon: 'bi-file-earmark-image-fill', type: 'Image', color: '#8E24AA' },           // Purple
+                    mp4: { icon: 'bi-file-earmark-play-fill', type: 'Video', color: '#009688' },            // Teal
+                    avi: { icon: 'bi-file-earmark-play-fill', type: 'Video', color: '#009688' },            // Teal
+                    mov: { icon: 'bi-file-earmark-play-fill', type: 'Video', color: '#009688' },            // Teal
+                    mp3: { icon: 'bi-file-earmark-music-fill', type: 'Audio', color: '#E91E63' },           // Magenta
+                    wav: { icon: 'bi-file-earmark-music-fill', type: 'Audio', color: '#E91E63' },           // Magenta
+                    zip: { icon: 'bi-file-earmark-zip-fill', type: 'Archive', color: '#795548' },           // Brown
+                    rar: { icon: 'bi-file-earmark-zip-fill', type: 'Archive', color: '#795548' },           // Brown
+                    csv: { icon: 'bi-file-earmark-spreadsheet-fill', type: 'CSV', color: '#388E3C' }        // Green
+                };
+                const defaultReturn = { icon: 'bi-file-earmark-fill', type: 'File', color: '#616161' };     // Grey for default
+                return fileDetails[extension] || defaultReturn;
+            }
+
+            // 預覽檔案
+            function previewFile(buffer) {
+                const iframe = document.getElementById('filePreviewIframe');
+                if (buffer.ext.預覽檔案狀態 === 'success') {
+                    iframe.src = URL.createObjectURL(buffer.ext.預覽檔案);
+                    iframe.onload = () => URL.revokeObjectURL(iframe.src);
+                    new bootstrap.Modal(document.getElementById('filePreviewModal')).show();
+                }
+                else if (buffer.ext.預覽檔案狀態 === 'loading')
+                    alert('預覽圖載入中，請稍後再試');
+                else if (buffer.ext.預覽檔案狀態 === 'unavailable')
+                    alert('此檔案格式不支援預覽');
+                else if (buffer.ext.預覽檔案狀態 === 'init')
+                    alert('檔案處理中，請稍後再試');
+            }
+
+            // 計算檔案SHA-256值
+            async function calculateHash(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        crypto.subtle.digest('SHA-256', reader.result).then(hashBuffer => {
+                            const hashArray = Array.from(new Uint8Array(hashBuffer));
+                            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                            resolve(hashHex);
+                        }).catch(reject);
+                    };
+                    reader.onerror = () => reject(reader.error);
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+
+            // 匯入檔案處理
+            async function handleFiles(files) {
+                // 輸入參數檢查
+                if (!files) return;
+                // 物料修改單檔案數量限制檢查
+                if (Object.entries(fileBuffer).length !== 0 || (files && files.length > 1)) { alert('只能上傳一份報價單'); return; };
+
+                const fileList = document.getElementById('fileList');
+                for (let i = 0; i < files.length; i++) {
+                    const current_ptr = fileBuffer_ptr;
+                    const parts = files[i].name.split('.');
+                    const extension = parts.pop().toLowerCase(); // 獲取副檔名並轉為小寫
+                    const nameWithoutExtension = parts.join('.'); // 將剩下的部分重新組合成檔名
+                    const iconConf = getIconConf(extension);
+
+                    fileBuffer[fileBuffer_ptr++] = createFileBuffer();
+                    const buffer = fileBuffer[current_ptr];
+                    buffer.ext.檔案 = files[i];
+                    buffer.ext.檔案種類 = iconConf.type;
+                    buffer.ext.圖示bs = iconConf.icon;
+                    buffer.ext.圖示顏色 = iconConf.color;
+                    buffer.ext.預覽檔案 = null;
+                    buffer.ext.預覽檔案狀態 = 'init';
+                    buffer.內容分類 = '報價單';
+                    buffer.檔案說明 = nameWithoutExtension;
+                    buffer.副檔名 = extension;
+
+                    // 使用模板字串創建代表檔案的區塊
+                    const block = `
+                        <div id="fileCtrlBlock-${current_ptr}" class="fileCtrlBlock position-relative border rounded p-3 mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <button type="button" class="fileBox btn btn-light flex-shrink-0 me-3">
+                                    <i class="bi ${buffer.ext.圖示bs} fs-1" style="color: ${buffer.ext.圖示顏色};"></i>
+                                </button>
+                                <div class="flex-grow-1 file-info-grid">
+                                    <div class="editedFileName">檔案說明:</div>
+                                    <div id="file-stmt-${current_ptr}">
+                                        <input id=file-stmt-input-${current_ptr} type="text" value="${buffer.檔案說明}" class="fileStmt-input border-0 pe-3 w-100" list="file-stmt-input-datalist-${current_ptr}"/>
+                                        <datalist id="file-stmt-input-datalist-${current_ptr}">
+                                            <option value="${buffer.檔案說明}">${buffer.檔案說明}</option>
+                                        </datalist>
+                                    </div>
+                                    <div>內容分類:</div>
+                                    <div id="file-type-${current_ptr}">
+                                        <select id="file-type-selector-${current_ptr}" class="fileContentType-select form-select form-select-sm" value="報價單" disabled>
+                                            <option value="報價單">報價單</option>
+                                        </select>
+                                    </div>
+                                    <div>狀態/路徑:</div>
+                                    <div id="file-status-${current_ptr}" class="text-truncate">
+                                        <i class="bi bi-upload icon text-info"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="remove-btn btn btn-danger btn-sm rounded-circle d-flex align-items-center justify-content-center">&times;</button>
+                        </div>
+                    `;
+                    const blockElement = document.createRange().createContextualFragment(block);
+                    fileList.appendChild(blockElement);
+
+                    // 绑定事件處理程序
+                    fileList.querySelector('#fileCtrlBlock-' + current_ptr.toString() + ' .fileBox').addEventListener('click', () => previewFile(buffer), false);
+                    fileList.querySelector('#fileCtrlBlock-' + current_ptr.toString() + ' .remove-btn').addEventListener('click', () => deleteFileBuffer(current_ptr), false);
+                    fileList.querySelector('#fileCtrlBlock-' + current_ptr.toString() + ' .fileStmt-input').addEventListener('input', event => buffer.檔案說明 = event.target.value, false);
+                    fileList.querySelector('#fileCtrlBlock-' + current_ptr.toString() + ' .fileContentType-select').addEventListener('change', event => buffer.內容分類 = event.target.value, false);
+
+                    // 計算檔案哈希值
+                    buffer.哈希值 = await calculateHash(buffer.ext.檔案);
+
+                    // 發送hash至後端檢查檔案是否存在
+                    let checkFileExistenceReturn = await checkFileExistence({hash: buffer.哈希值});
+
+                    const fileStmtDatalist = document.getElementById(`file-stmt-${current_ptr}`).querySelector('datalist');
+                    const fileTypeSelector = document.getElementById(`file-type-${current_ptr}`).querySelector('select');
+                    const fileStatus = document.getElementById(`file-status-${current_ptr}`);
+
+                    if (checkFileExistenceReturn && checkFileExistenceReturn.found) {
+                        if (checkFileExistenceReturn.檔案說明 && checkFileExistenceReturn.檔案說明 !== buffer.檔案說明) {
+                            alert('上傳的檔案存在於檔案管理系統，但檔案說明(檔名)不相同！\n提交表單後，將優先使用新的檔案說明！');
+                            fileStmtDatalist.appendChild(new Option(checkFileExistenceReturn.檔案說明, checkFileExistenceReturn.檔案說明));
+                        }
+                        if (checkFileExistenceReturn.內容分類 && checkFileExistenceReturn.內容分類 !== buffer.內容分類) {
+                            alert('上傳的檔案存在於檔案管理系統，內容分類卻不是報價單！\n提交表單後，將自動歸類為報價單！');
+                        }
+                        if (checkFileExistenceReturn.副檔名 && checkFileExistenceReturn.副檔名 !== buffer.副檔名) {
+                            alert('檔案副檔名衝突！\n提交表單後，將優先使用新的副檔名');
+                        }
+                        buffer.默認主鍵 = checkFileExistenceReturn.默認主鍵;
+                        buffer.內容分類 = buffer.內容分類 || checkFileExistenceReturn.內容分類 || '';
+                        buffer.檔案說明 = buffer.檔案說明 || checkFileExistenceReturn.檔案說明 || '';
+                        buffer.副檔名 = buffer.副檔名 || checkFileExistenceReturn.副檔名 || '';
+                        buffer.檔案路徑 = checkFileExistenceReturn.檔案路徑;
+                        fileTypeSelector.value = buffer.內容分類 || checkFileExistenceReturn.內容分類 || '';
+                        fileStatus.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> ${checkFileExistenceReturn.檔案路徑}`;
+                    } else {
+                        // 伺服器暫存
+                        fileStatus.innerHTML = `<i class="bi bi-upload text-info me-2"></i>正在上傳檔案...`;
+                        const formData = new FormData();
+                        formData.append('file', buffer.ext.檔案);
+                        formData.append('內容分類', buffer.內容分類);
+                        formData.append('檔案說明', buffer.檔案說明);
+                        formData.append('副檔名', buffer.副檔名);
+                        formData.append('哈希值', buffer.哈希值);
+
+                        let cacheFileReturn = await cacheAttachment(formData);
+                        
+                        buffer.默認主鍵 = cacheFileReturn.id;
+                        buffer.檔案路徑 = cacheFileReturn.path;
+                        fileStatus.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> ${cacheFileReturn.path}`;
+                    }
+                    
+                    // 預覽
+                    if (buffer.ext.檔案種類 === 'PDF' || buffer.ext.檔案種類 === 'Image') {
+                        buffer.ext.預覽檔案 = buffer.ext.檔案;
+                        buffer.ext.預覽檔案狀態 = 'success';
+                    }
+                    else if (buffer.ext.檔案種類 === 'Word' || buffer.ext.檔案種類 === 'PowerPoint' || buffer.ext.檔案種類 === 'Excel') {
+                        buffer.ext.預覽檔案 = null;
+                        buffer.ext.預覽檔案狀態 = 'loading';
+
+                        const formData = new FormData();
+                        formData.append('file', buffer.ext.檔案);
+                        formData.append('檔案種類', buffer.ext.檔案種類);
+                        formData.append('副檔名', buffer.副檔名);
+
+                        let convertToPreviewFileReturn = await convertToPreviewFile(formData);
+                        buffer.ext.預覽檔案 = convertToPreviewFileReturn;
+                        buffer.ext.預覽檔案狀態 = 'success';
+                    }
+                    else {
+                        buffer.ext.預覽檔案 = null;
+                        buffer.ext.預覽檔案狀態 = 'unavailable';
+                    }
+                }
+            }
+
+            // 延遲觸發函數，降低效能影響
+            function debounce(func, wait) {
+                let timeout;
+                return function (...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+            
+            // 封裝需要被延遲執行的函數
+            const debounceHandleMtrlSecStatus = debounce(handleMtrlSecStatus, 250);
+
+            function startUp() {
+                formMode = '創建';
+                document.getElementById('radioContainer').addEventListener('change', event => event.target.name === 'form-mode-group' && event.target.checked && handleFormModeChange(event.target.value));
+
+                // 動態載入資料集
+                Promise.all(resourceName_get.map(fetchResource)).then(() => {
+                    if (formMode === '更新') {
+                        setupSelectOptions(document.getElementById('material_datalist'), dataFrame.materials['物料代號'].values);       // 物料表>料號
+                        setupSelectOptions(document.getElementById('supplier_datalist'), dataFrame.materials['供應商簡稱'].values);     // 物料表>供應商
+                    }
+                    else if (formMode === '創建')
+                        setupSelectOptions(document.getElementById('supplier_datalist'), dataFrame.suppliers['簡稱'].values);           // 供應商
+                    setupSelectOptions(document.getElementById('Input_currency'), dataFrame.currencies['代號'].values);                 // 幣別
+                    setupSelectOptions(document.getElementById('Input_unit'), dataFrame.units['代碼'].values);                          // 單位
+                    setupSelectOptions(document.getElementById('Input_materialType'), dataFrame.materialType['類別'].values, true);     // 物料類別
+                    setupSelectOptions(document.getElementById('employee_datalist'), dataFrame.employees['工號簡碼'].values);           // 申請人
+                    setupSelectOptions(document.getElementById('Input_delieveryOffice'), dataFrame.minmaxOffice['廠區名稱'].values);    // 收貨廠區
+                })
+                    .catch(error => console.error('Error during startup:', error));
+
+                // 設置表單智慧輸入建議的事件觸發與處理器
+                document.getElementById('Input_materialId').addEventListener('input', debounceHandleMtrlSecStatus, false);
+                document.getElementById('Input_supplier').addEventListener('input', debounceHandleMtrlSecStatus, false);
+
+                // 輸入框內容快捷清除功能的事件觸發與處理器
+                document.getElementById('Input_materialId').addEventListener('input', setEraseIconVisibility, false);
+                document.getElementById('Input_supplier').addEventListener('input', setEraseIconVisibility, false);
+                document.getElementById('Input_applier').addEventListener('input', setEraseIconVisibility, false);
+
+                // 設置物料區塊欄位清除內容按鈕的事件觸發與處理器
+                Array.from(document.getElementsByClassName('clr-input-btn')).forEach(button => button.addEventListener('click', clearTextbox, false));
+
+                // 禁止全頁面層級drag事件瀏覽器預設行為
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => document.body.addEventListener(eventName, event => (event.preventDefault(), event.stopPropagation()), false));
+
+                // 上傳檔案的事件觸發與處理器
+                document.getElementById('Input_files').addEventListener('change', event => handleFiles(event.target.files), false);
+                document.body.addEventListener('drop', event => handleFiles(event.dataTransfer.files), false);
+
+                // 提交表單的事件觸發與處理器
+                document.getElementById('material-form').addEventListener('submit', submitMaterialForm, false);
+            }
+            window.addEventListener('DOMContentLoaded', startUp, false);
+        })();
+    </script>
+</body>
+
+</html>

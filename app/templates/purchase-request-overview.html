@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Requisition Overview</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/danfojs@1.1.2/lib/bundle.js"></script>
+    <style>
+        .table-responsive {
+            overflow-x: auto;
+        }
+        .table thead th {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Purchase Requisition Overview</h1>
+        
+        <!-- 搜索條件 -->
+        <form id="filter-form" class="mt-4">
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="start-date" class="form-label">Start Date</label>
+                    <input type="date" id="start-date" name="start_date" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label for="end-date" class="form-label">End Date</label>
+                    <input type="date" id="end-date" name="end_date" class="form-control" required>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="status-filter" name="status">
+                        <label class="form-check-label" for="status-filter">只顯示"等待排單"狀態</label>
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- 增加分組按鈕 -->
+        <button id="add-group" class="btn btn-primary mt-3">Add Group</button>
+
+        <!-- 資料清單 -->
+        <div id="records-container" class="mt-4">
+            <!-- 清單將動態填充 -->
+        </div>
+
+        <!-- 生成CSV按鈕 -->
+        <button id="generate-csv" class="btn btn-success mt-4">Generate CSV</button>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            let groupCounter = 0;
+            let allRecordsDf = null; // 全部資料的 DataFrame
+            const columnNames = ["默認主鍵", "供應商簡稱", "物料代號", "單價", "幣別", "單位", "物料類別", "需求數量", "申請人工號簡碼", "需求到貨日期", "收貨廠區", "請購類型", "專案名稱", "用途說明", "備註", "狀態", "狀態更新時間戳", "資材部請購單號", "創建時間戳", "更新時間戳"];
+
+            $('#filter-form').on('submit', function (e) {
+                e.preventDefault();
+                fetchRecords();
+            });
+
+            async function fetchRecords() {
+                const startDate = $('#start-date').val();
+                const endDate = $('#end-date').val();
+                const statusFilter = $('#status-filter').is(':checked') ? '等待排單' : '';
+                try {
+                    const response = await $.ajax({
+                        url: '/api/purchaseRequests',
+                        type: 'GET',
+                        data: {
+                            start_date: startDate,
+                            end_date: endDate,
+                            status: statusFilter
+                        }
+                    });
+                    allRecordsDf = new dfd.DataFrame(response);
+                    // console.log(allRecordsDf);
+                    renderRecords(allRecordsDf);
+                } catch (error) {
+                    console.error('Error fetching records:', error);
+                }
+            }
+
+            function renderRecords(df) {
+                const container = $('#records-container');
+                container.empty();
+
+                if (df.shape[0] === 0) {
+                    container.append('<p>No records found.</p>');
+                    return;
+                }
+
+                const tableContainer = $('<div class="table-responsive"></div>');
+                const table = $('<table class="table table-striped"></table>');
+                const thead = $('<thead></thead>');
+                const tbody = $('<tbody id="initial-list"></tbody>');
+                const headerRow = $('<tr></tr>');
+                columnNames.forEach(column => {
+                    headerRow.append(`<th>${column}</th>`);
+                });
+                thead.append(headerRow);
+
+                dfd.toJSON(df).forEach(record => {
+                    const row = $('<tr></tr>');
+                    columnNames.forEach(columnName => row.append(`<td>${record[columnName]}</td>`));
+                    tbody.append(row);
+                });
+
+                table.append(thead).append(tbody);
+                tableContainer.append(table);
+                container.append(tableContainer);
+
+                // 初始化拖曳功能
+                Sortable.create(tbody[0], {
+                    animation: 150,
+                    handle: 'tr',
+                    ghostClass: 'sortable-ghost',
+                    group: 'shared',
+                });
+            }
+
+            $('#add-group').on('click', function () {
+                addGroup();
+            });
+
+            function addGroup() {
+                groupCounter++;
+                const groupId = 'group-' + groupCounter;
+                const groupContainer = $('<div class="table-responsive group-container mt-4"></div>');
+                const groupTitle = $('<h5>Group ' + groupCounter + '</h5>');
+                const deleteGroupBtn = $('<button class="btn btn-danger btn-sm delete-group-btn">Delete Group</button>');
+                const groupTable = $(`
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                ${columnNames.map(column => `<th>${column}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody id="${groupId}"></tbody>
+                    </table>
+                `);
+
+                groupContainer.append(groupTitle).append(deleteGroupBtn).append(groupTable);
+                $('#records-container').append(groupContainer);
+
+                Sortable.create(document.getElementById(groupId), {
+                    group: 'shared',
+                    animation: 150,
+                    handle: 'tr',
+                    ghostClass: 'sortable-ghost'
+                });
+
+                deleteGroupBtn.on('click', function () {
+                    const rows = groupContainer.find('tbody tr');
+                    $('#initial-list').append(rows);
+                    groupContainer.remove();
+                });
+
+                // 初始化初始清單的拖曳功能
+                Sortable.create(document.getElementById('initial-list'), {
+                    group: 'shared',
+                    animation: 150,
+                    handle: 'tr',
+                    ghostClass: 'sortable-ghost'
+                });
+            }
+
+            $('#generate-csv').on('click', function () {
+                generateCSV();
+            });
+
+            function generateCSV() {
+                const groups = Array.from($('#records-container .group-container tbody')).map(function (tbody) {
+                    const rows = Array.from($(tbody).find('tr')).map(function (tr) {
+                        const row = {};
+                        columnNames.forEach((column, index) => {
+                            row[column] = $(tr).find('td').eq(index).text();
+                        });
+                        return row;
+                    });
+
+                    return rows.length > 0 ? rows : null;
+                }).filter(group => group !== null);
+
+                if (groups.length === 0) {
+                    alert('No groups to generate CSV.');
+                    return;
+                }
+
+                const zip = new JSZip();
+
+                groups.forEach((group, index) => {
+                    let csvContent = "\uFEFF" + columnNames.join(",") + "\n"
+                        + group.map(row => 
+                            columnNames.map(column => `"${row[column]}"`).join(",")).join("\n");
+
+                    zip.file('group-' + (index + 1) + '.csv', csvContent);
+                });
+
+                zip.generateAsync({ type: 'blob' }).then(function (content) {
+                    saveAs(content, 'purchase_requests.zip');
+                });
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.7.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+</body>
+</html>

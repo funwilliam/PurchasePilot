@@ -1,4 +1,4 @@
-from app.models.base import Base, db
+from app.models.base import db
 from sqlalchemy import Column, String
 
 class 物料類別(db.Model):

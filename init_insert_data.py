@@ -155,3 +155,24 @@ with app.app_context():
     for key in data_set:
         db.session.bulk_save_objects(data_set[key])
     db.session.commit()
+
+
+# 試錯
+# app = create_app()
+# with app.app_context():
+#     df = pd.read_csv('instance\物料.csv', encoding='utf-8')
+#     for index, row in df.iterrows():
+        
+#         tmp = 物料(
+#             物料代號=row['物料代號'],
+#             供應商簡稱=row['供應商簡稱'],
+#             品名規格=row['品名規格'],
+#             單價=row['單價'],
+#             幣別=row['幣別'],
+#             單位=row['單位'],
+#             預設收貨廠區=row['預設收貨廠區'],
+#         )
+#         db.session.add(tmp)
+
+#         if index % 50 == 0:
+#             db.session.commit()
