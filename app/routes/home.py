@@ -1,8 +1,12 @@
 from flask import Blueprint, jsonify, render_template
 home = Blueprint('home', __name__)
 
-@home.route('/reqStmt-form')
+@home.route('/')
 def index():
+    return render_template('index.html')
+
+@home.route('/reqStmt-form')
+def req_stmt_form():
     return render_template('purchase-request-form.html')
 
 @home.route('/material-form')

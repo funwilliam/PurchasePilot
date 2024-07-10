@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>選擇表單</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-PI8n5gCcz9cQqQXm3PEtDuPG8qx9oFsFctPg0S5zb8g=" crossorigin="anonymous">
+    <style>
+        .form-card {
+            transition: transform 0.2s;
+        }
+        .form-card:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4 text-center">選擇表單</h1>
+        <div class="row mb-5">
+            <h3 class="my-3">表單</h3>
+            <div class="col-md-4 mb-4">
+                <div class="card form-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">請購單</h5>
+                        <p class="card-text">填寫新的請購單。</p>
+                        <a href="/reqStmt-form" class="btn btn-primary">開始</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card form-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">物料單</h5>
+                        <p class="card-text">填寫新的物料單。</p>
+                        <a href="/material-form" class="btn btn-primary">開始</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <h3 class="my-3">工具</h3>
+            <div class="col-md-4">
+                <div class="card form-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">請購單管理</h5>
+                        <p class="card-text">查看和管理請購單。</p>
+                        <a href="/manage-reqStmt" class="btn btn-primary">開始</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha256-CDOy6cOibCWEdsRiZuaHf8dSGGJRYuBGC+mjoJimHGw=" crossorigin="anonymous"></script>
+</body>
+</html>

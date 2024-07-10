@@ -1,7 +1,9 @@
 import os
 import dotenv
+import argparse
 from flask import Flask
 from flask_migrate import Migrate
+from waitress import serve
 from app import utils, db, home as home_blueprint, api as api_blueprint
 
 dotenv.load_dotenv()
@@ -25,7 +27,11 @@ def create_app():
     Migrate(app, db)
 
     return app
-
+    
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True)
+    parser = argparse.ArgumentParser(description='Run the Flask app.')
+    parser.add_argument('--port', type=int, default=5000, help='Port to run the Flask app on')
+    args = parser.parse_args()
+    serve(app, host='0.0.0.0', port=args.port, threads=8)
+    # app.run(host='0.0.0.0', port=args.port, debug=True)
