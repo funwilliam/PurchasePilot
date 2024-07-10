@@ -443,22 +443,6 @@ def get_purchaseRequestStmt_resource():
         print(e)
         return jsonify({'error': 'Server error', 'message': str(e)}), 400
 
-# @api.route('/purchaseRequestStmts/<int:prime_key>/relatedFilePrime', methods=['GET'])
-# def get_purchaseRequestStmtFile_resource(prime_key):
-#     try:
-#         if not prime_key:
-#             raise ValueError('prime_key is empty.')
-
-#         stmt_record = 請購明細.query.filter_by(默認主鍵 =prime_key).scalar()
-#         if not stmt_record:
-#             raise ValueError(f'請購明細 {prime_key} is not in the table.')
-        
-#         file_records = stmt_record.附件檔案
-
-#     except Exception as e:
-#         print(f"Error: {e}")
-#         traceback.print_exc()
-
 @api.route('/purchaseRequestStmts', methods=['POST'])
 def post_purchaseRequestStmt_resource():
     try:
