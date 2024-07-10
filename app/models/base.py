@@ -31,7 +31,9 @@ class BaseModel(db.Model):
         for column in columns:
             attr = getattr(self, column.name)
             # 如果是 DateTime 型別，需要轉換為 ISO 格式的str
-            if isinstance(attr, DateTime):
+            if isinstance(column.type, DateTime):
+                data[column.name] = attr.isoformat(timespec='seconds') if attr else None
+            elif isinstance(column.type, Date):
                 data[column.name] = attr.isoformat() if attr else None
             else:
                 data[column.name] = attr

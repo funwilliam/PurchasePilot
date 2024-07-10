@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Purchase Requisition Overview</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/danfojs@1.1.2/lib/bundle.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-PI8n5gCcz9cQqQXm3PEtDuPG8qx9oFsFctPg0S5zb8g=" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI=" crossorigin="anonymous">
     <style>
         .table-responsive {
             overflow-x: auto;
@@ -17,37 +13,57 @@
         .table thead th {
             white-space: nowrap;
         }
+        .sortable-ghost {
+            opacity: 0.8;
+        }
+        /* .sortable-ghost td {
+            visibility: hidden;
+        } */
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="mt-5">Purchase Requisition Overview</h1>
-        
+        <h1 class="mt-5 mb-2 fw-bold">請購明細彙整</h1>
+        <h4 class="my-1" style="opacity: .9;">匯出ERP請購系統csv格式</h3>
         <!-- 搜索條件 -->
-        <form id="filter-form" class="mt-4">
+        <form id="filter-form" class="my-4" autocomplete="off">
             <div class="row">
-                <div class="col-md-3">
-                    <label for="start-date" class="form-label">Start Date</label>
-                    <input type="date" id="start-date" name="start_date" class="form-control" required>
+                <div class="col-md-2 pe-4">
+                    <label for="Input-startDate" class="form-label fw-bold m-1">起始日</label>
+                    <input type="date" id="Input-startDate" name="start_date" class="form-control">
                 </div>
-                <div class="col-md-3">
-                    <label for="end-date" class="form-label">End Date</label>
-                    <input type="date" id="end-date" name="end_date" class="form-control" required>
+                <div class="col-md-2 px-4">
+                    <label for="Input-endDate" class="form-label fw-bold m-1">結束日</label>
+                    <input type="date" id="Input-endDate" name="end_date" class="form-control">
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="status-filter" name="status">
-                        <label class="form-check-label" for="status-filter">只顯示"等待排單"狀態</label>
-                    </div>
+                <div class="col-md-2 px-4">
+                    <label for="Input_stmtStatus" class="form-label fw-bold">狀態</label>
+                    <select id="Input_stmtStatus" class="form-select" value="" aria-label="請購狀態選單">
+                        <option value="">[待處理]</option>
+                        <!-- <option value="等待物料更新">等待物料更新</option> -->
+                        <option value="等待集單">等待集單</option>
+                        <option value="退件">退件</option>
+                        <!-- <option value="簽核中">簽核中</option>
+                        <option value="採購&等待交貨">採購&等待交貨</option>
+                        <option value="部分驗收">部分驗收</option>
+                        <option value="等待驗收">等待驗收</option>
+                        <option value="已結案">已結案</option> -->
+                    </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary">Filter</button>
+                <div class="col-md-2 px-4">
+                    <label for="Input_applier" class="form-label fw-bold">申請人工號</label>
+                    <input type="text" class="form-control" id="Input_applier" placeholder="Ex. 001" list="employee_datalist">
+                    <datalist id="employee_datalist"></datalist>
                 </div>
+                <div class="col-md-1 d-flex align-items-center justify-content-center">
+                    <button id="search-btn" type="button" class="btn btn-primary">搜尋</button>
+                </div>
+                <div class="col-md-3"></div>
             </div>
         </form>
 
         <!-- 增加分組按鈕 -->
-        <button id="add-group" class="btn btn-primary mt-3">Add Group</button>
+        <button id="addGroup-btn" class="btn btn-primary mt-3">新增群組</button>
 
         <!-- 資料清單 -->
         <div id="records-container" class="mt-4">
@@ -55,73 +71,317 @@
         </div>
 
         <!-- 生成CSV按鈕 -->
-        <button id="generate-csv" class="btn btn-success mt-4">Generate CSV</button>
+        <button id="generateCSV-btn" class="btn btn-success mt-4">請購單排單</button>
     </div>
-
+    <!-- Modal 結構: 彈窗預覽檔案 -->
+    <div class="modal fade" id="filePreviewModal" tabindex="-1" aria-labelledby="filePreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filePreviewModalLabel">文件預覽</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <iframe id="filePreviewIframe" width="100%" height="600px" class="d-none"></iframe>
+                    <video id="videoPlayer" controls class="w-100 d-none">
+                        Your browser does not support the video tag.
+                    </video>
+                    <audio id="audioPlayer" controls class="w-100 d-none">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.7.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/danfojs@1.1.2/lib/bundle.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha256-CDOy6cOibCWEdsRiZuaHf8dSGGJRYuBGC+mjoJimHGw=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
     <script>
-        $(document).ready(function () {
+        (() => {
+            const resourceName_get = [
+                'suppliers',
+                'employees',
+                'minmaxOffice',
+            ];
+
+            const dataFrame = {};
+
+            const dfColNames = [
+                '默認主鍵',
+                '供應商簡稱',
+                '物料代號',
+                '單價',
+                '幣別',
+                '單位',
+                '物料類別',
+                '需求數量',
+                '申請人工號簡碼',
+                '需求到貨日期',
+                '收貨廠區',
+                '請購類型',
+                '專案名稱',
+                '用途說明',
+                '備註',
+                '狀態',
+                '狀態更新時間戳',
+                '資材部請購單號',
+                '創建時間戳',
+                '更新時間戳',
+            ];
+
+            const tableColNames = [
+                'ID',
+                '申請人',
+                '供應商',
+                '料號',
+                '品名規格',
+                '請購數量',
+                '預估單價',
+                '金額',
+                '幣別',
+                '單位',
+                '需求日期',
+                '提交日期',
+                '用途說明',
+            ];
+
+            const colNameMapping = {
+                'ID': '默認主鍵',
+                '申請人': '申請人工號簡碼',
+                '供應商': '供應商簡稱',
+                '料號': '物料代號',
+                // '品名規格': null,
+                '請購數量': '需求數量',
+                '單位': '單位',
+                '幣別': '幣別',
+                '預估單價': '單價',
+                // '金額': null,
+                '需求日期': '需求到貨日期',
+                '提交日期': '創建時間戳',
+                '用途說明': '用途說明',
+            }
+
+            let downloadPromises = [];
+            let attachmentsDict = {};
             let groupCounter = 0;
-            let allRecordsDf = null; // 全部資料的 DataFrame
-            const columnNames = ["默認主鍵", "供應商簡稱", "物料代號", "單價", "幣別", "單位", "物料類別", "需求數量", "申請人工號簡碼", "需求到貨日期", "收貨廠區", "請購類型", "專案名稱", "用途說明", "備註", "狀態", "狀態更新時間戳", "資材部請購單號", "創建時間戳", "更新時間戳"];
+            let reqStmtFilterResultDf = null;
+            let searchLock = false;
 
-            $('#filter-form').on('submit', function (e) {
-                e.preventDefault();
-                fetchRecords();
-            });
+            // 用以讀取主要相依資源
+            function fetchResource(resourceName) {
+                const url = new URL(`/api/${resourceName}`, window.location.origin);
+                return fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        dataFrame[resourceName] = new dfd.DataFrame(data);
+                        // console.log(`Fetched ${resourceName}`);
+                    })
+                    .catch(error => console.error(`Error fetching ${resourceName}:`, error));
+            }
 
-            async function fetchRecords() {
-                const startDate = $('#start-date').val();
-                const endDate = $('#end-date').val();
-                const statusFilter = $('#status-filter').is(':checked') ? '等待排單' : '';
+            // 查詢指定物料
+            async function searchMaterial({supplierName, materialId}={}) {
+                const url = new URL(`/api/materials`, window.location.origin);
+                url.searchParams.append('supplierName', supplierName);
+                url.searchParams.append('materialId', materialId);
+                const response = await fetch(url);
+                if (response.ok) {
+                    const data = await response.json();
+                    return {'status': '成功', 'data': data[0]}
+                }
+                else
+                    return {'status': '失敗'}
+            }
+
+
+            // 從後端取得檔案
+            async function fetchAttachment(primeKey) {
                 try {
-                    const response = await $.ajax({
-                        url: '/api/purchaseRequests',
-                        type: 'GET',
-                        data: {
-                            start_date: startDate,
-                            end_date: endDate,
-                            status: statusFilter
+                    // 創建URL對象，基於當前頁面的根URL
+                    const url = new URL(`/api/files/${primeKey}`, window.location.origin);
+                    const response = await fetch(url);
+                    const contentType = response.headers.get('Content-Type');
+
+                    // 根據本api的設定，json格式是報錯時才會回傳，檔案回傳由後端自動判斷mimetype。
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        if (data.error) throw new Error(data.error);
+                        else throw new Error('Unknown error in JSON response');
+                    }
+                    else if (contentType) {
+                        let blob = await response.blob();
+                        let contentDisposition = response.headers.get('Content-Disposition');
+                        let filename = '原檔名遺失';
+                        if (contentDisposition) {
+                            // 優先處理 filename* (RFC 5987 格式編碼，可以解析中文)
+                            let match = contentDisposition.match(/filename\*=(?:UTF-8'')?([^;\n]*)/);
+                            if (match && match[1]) {
+                                filename = decodeURIComponent(match[1].replace(/['"]/g, ''));
+                            }
+                            else {
+                                // 處理 filename (無法解析中文)
+                                match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                                if (match && match[1]) {
+                                    filename = match[1].replace(/['"]/g, '');
+                                }
+                            }
                         }
-                    });
-                    allRecordsDf = new dfd.DataFrame(response);
-                    // console.log(allRecordsDf);
-                    renderRecords(allRecordsDf);
+                        return new File([blob], filename, { type: contentType });
+                    }
+                    else
+                        throw new Error('Unknown response type');
                 } catch (error) {
-                    console.error('Error fetching records:', error);
+                    console.error('Error: 傳輸伺服器附件時發生錯誤\n' + error);
+                    alert('傳輸伺服器附件時發生錯誤：' + error.message);
+                    return null;
                 }
             }
 
-            function renderRecords(df) {
-                const container = $('#records-container');
-                container.empty();
+            /**
+             * Fetch purchase request statements based on the provided filter criteria.
+             * @param {Object} param0 - The filter criteria.
+             * @param {string} param0.startDate - The start date for the filter.
+             * @param {string} param0.endDate - The end date for the filter.
+             * @param {string} param0.applierId - The ID of the applier.
+             * @param {Array|string} param0.stmtStatus - The status or statuses of the statements.
+             * @returns {Object} - An object containing the status, DataFrame, related file metadata, and download promises.
+             */
+            async function fetchPurchaseReqStmt({ startDate, endDate, applierId, stmtStatus } = {}) {
+                try {
+                    const url = new URL('/api/purchaseRequestStmts', window.location.origin);
+                    url.searchParams.append('startDate', startDate);
+                    url.searchParams.append('endDate', endDate);
+                    url.searchParams.append('applierId', applierId);
+                    if (Array.isArray(stmtStatus)) {
+                        stmtStatus.forEach(status => url.searchParams.append('stmtStatus', status));
+                    } else {
+                        url.searchParams.append('stmtStatus', stmtStatus);
+                    }
+
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        const filterResultDf = new dfd.DataFrame(data.queryResult).drop({ columns: ['附件檔案'], inplace: false });
+
+                        const attachmentsDict = {};
+                        const downloadPromises = data.queryResult.flatMap(record => {
+                            const key = record["默認主鍵"];
+                            const applierNo = record["申請人工號簡碼"];
+                            const supplierName = record["供應商簡稱"];
+                            const fileMetas = record["附件檔案"];
+
+                            if (fileMetas) {
+                                attachmentsDict[key] = fileMetas.map(fileMeta => {
+                                    const downloadPromise = fetchAttachment(fileMeta['默認主鍵']).then(file => {
+                                        return {
+                                            file: file,
+                                            filename: `明細編號[${key}]_請購人[${applierNo}]_供應商[${supplierName}]_內容[${fileMeta['內容分類']}].${fileMeta['副檔名']}`
+                                        };
+                                    });
+                                    return downloadPromise;
+                                });
+                                return attachmentsDict[key];
+                            }
+                            return [];
+                        });
+
+                        return { 'status': '成功', 'df': filterResultDf, 'attachmentsDict': attachmentsDict, 'downloadPromises': downloadPromises };
+                    } else {
+                        throw new Error(data.error);
+                    }
+                } catch (error) {
+                    console.error('Error fetching records:', error);
+                    return { 'status': '失敗', 'df': null, 'attachmentsDict': null, 'downloadPromises': [] };
+                }
+            }
+
+            async function search() {
+                if (searchLock) {
+                    if (!confirm('重新搜尋將重置當前進度，請問是否繼續？')) return;
+                }
+                searchLock = true;
+                attachmentsDict = {}; // Reset attachmentsDict
+
+                const startDate = document.getElementById('Input-startDate').value || '';
+                const endDate = document.getElementById('Input-endDate').value || '';
+                const Input_stmtStatus = document.getElementById('Input_stmtStatus').value || '';
+                const stmtStatus = Input_stmtStatus === '' ? ['等待集單', '退件'] : Input_stmtStatus;
+                const applierId = document.getElementById('Input_applier').value || '';
+
+                const fetchPurchaseReqStmtReturn = await fetchPurchaseReqStmt({ startDate, endDate, stmtStatus, applierId });
+
+                if (fetchPurchaseReqStmtReturn.status === '成功') {
+                    reqStmtFilterResultDf = fetchPurchaseReqStmtReturn.df;
+                    await renderRecords(fetchPurchaseReqStmtReturn.df);
+                    attachmentsDict = fetchPurchaseReqStmtReturn.attachmentsDict; // Store the attachments dictionary
+                    downloadPromises = fetchPurchaseReqStmtReturn.downloadPromises; // Store the download promises
+                } else if (fetchPurchaseReqStmtReturn.status === '失敗') {
+                    alert('搜尋失敗');
+                }
+            }
+
+            async function renderRecords(df) {
+                const container = document.getElementById('records-container');
+                container.innerHTML = '';
 
                 if (df.shape[0] === 0) {
-                    container.append('<p>No records found.</p>');
+                    const noRecordsMessage = document.createElement('p');
+                    noRecordsMessage.textContent = 'No records found.';
+                    container.appendChild(noRecordsMessage);
                     return;
                 }
 
-                const tableContainer = $('<div class="table-responsive"></div>');
-                const table = $('<table class="table table-striped"></table>');
-                const thead = $('<thead></thead>');
-                const tbody = $('<tbody id="initial-list"></tbody>');
-                const headerRow = $('<tr></tr>');
-                columnNames.forEach(column => {
-                    headerRow.append(`<th>${column}</th>`);
+                const tableContainer = document.createElement('div');
+                tableContainer.className = 'table-responsive';
+                const table = document.createElement('table');
+                table.className = 'table table-striped user-select-none';
+                const thead = document.createElement('thead');
+                const tbody = document.createElement('tbody');
+                tbody.id = 'initial-list';
+                const headerRow = document.createElement('tr');
+
+                tableColNames.forEach(columnName => {
+                    const th = document.createElement('th');
+                    th.textContent = columnName;
+                    headerRow.appendChild(th);
                 });
                 thead.append(headerRow);
 
-                dfd.toJSON(df).forEach(record => {
-                    const row = $('<tr></tr>');
-                    columnNames.forEach(columnName => row.append(`<td>${record[columnName]}</td>`));
-                    tbody.append(row);
+                dfd.toJSON(df).forEach(async stmtRecord => {
+                    const row = document.createElement('tr');
+                    row.id = `stmtID-${stmtRecord[colNameMapping['ID']]}`;
+                    const searchResult = await searchMaterial({
+                        supplierName: stmtRecord['供應商簡稱'],
+                        materialId: stmtRecord['物料代號']
+                    });
+                    const totalPrice = parseFloat((stmtRecord['單價'] * stmtRecord['需求數量']).toFixed(3));
+
+                    tableColNames.forEach(columnName => {
+                        const td = document.createElement('td');
+                        if (columnName === '品名規格' && searchResult.status)
+                            td.textContent = searchResult.data['品名規格'];
+                        else if (columnName === '金額') 
+                            td.textContent = totalPrice;
+                        else
+                            td.textContent = stmtRecord[colNameMapping[columnName]];
+                        row.appendChild(td);
+                    });
+                    tbody.appendChild(row);
                 });
 
-                table.append(thead).append(tbody);
-                tableContainer.append(table);
-                container.append(tableContainer);
+                table.appendChild(thead);
+                table.appendChild(tbody);
+                tableContainer.appendChild(table);
+                container.appendChild(tableContainer);
 
-                // 初始化拖曳功能
-                Sortable.create(tbody[0], {
+                Sortable.create(tbody, {
                     animation: 150,
                     handle: 'tr',
                     ghostClass: 'sortable-ghost',
@@ -129,21 +389,17 @@
                 });
             }
 
-            $('#add-group').on('click', function () {
-                addGroup();
-            });
-
             function addGroup() {
                 groupCounter++;
-                const groupId = 'group-' + groupCounter;
+                const groupId = `group-${groupCounter}`;
                 const groupContainer = $('<div class="table-responsive group-container mt-4"></div>');
-                const groupTitle = $('<h5>Group ' + groupCounter + '</h5>');
-                const deleteGroupBtn = $('<button class="btn btn-danger btn-sm delete-group-btn">Delete Group</button>');
+                const groupTitle = $(`<h5>Group ${groupCounter}</h5>`);
+                const deleteGroupBtn = $('<button class="btn btn-danger btn-sm my-3 delete-group-btn">Delete Group</button>');
                 const groupTable = $(`
-                    <table class="table table-bordered">
+                    <table class="table table-bordered user-select-none">
                         <thead>
                             <tr>
-                                ${columnNames.map(column => `<th>${column}</th>`).join('')}
+                                ${tableColNames.map(colName => `<th>${colName}</th>`).join('')}
                             </tr>
                         </thead>
                         <tbody id="${groupId}"></tbody>
@@ -175,45 +431,159 @@
                 });
             }
 
-            $('#generate-csv').on('click', function () {
-                generateCSV();
-            });
+            async function generateCSV() {
+                try {
+                    const outputColNames_1 = [
+                        '料品代號',
+                        '請購數量',
+                        '需求日期',
+                        '建議廠商',
+                        '送貨地址碼',
+                        '備註',
+                    ];
+                    const outputColNames_2 = [
+                        '備註摘要',
+                        '備註說明',
+                    ];
+                    
+                    await Promise.all(downloadPromises);
 
-            function generateCSV() {
-                const groups = Array.from($('#records-container .group-container tbody')).map(function (tbody) {
-                    const rows = Array.from($(tbody).find('tr')).map(function (tr) {
-                        const row = {};
-                        columnNames.forEach((column, index) => {
-                            row[column] = $(tr).find('td').eq(index).text();
+                    const groups = Array.from($('#records-container .group-container tbody')).map(function (tbody) {
+                        const rows = Array.from($(tbody).find('tr')).map(function (tr) {
+                            const stmtID = Number(tr.id.match(/\d+$/)[0]);
+                            let query = reqStmtFilterResultDf.loc({ rows: reqStmtFilterResultDf['默認主鍵'].eq(stmtID) });
+                            const stmt = query.shape[0] === 1 ? dfd.toJSON(query)[0] : null;
+                            query = dataFrame.suppliers.loc({ rows: dataFrame.suppliers['簡稱'].eq(stmt['供應商簡稱']) });
+                            const supplierNo = query.shape[0] === 1 ? query['供應商編號'].values[0] : null;
+                            query = dataFrame.minmaxOffice.loc({ rows: dataFrame.minmaxOffice['廠區名稱'].eq(stmt['收貨廠區']) });
+                            const OfficeNo = query.shape[0] === 1 ? query['地址碼'].values[0] : null;
+                            if (!stmt || !supplierNo || !OfficeNo) {
+                                throw new Error('Something wrong happened when querying result.');
+                            }
+
+                            return {
+                                '料品代號': stmt['物料代號'],
+                                '請購數量': stmt['需求數量'],
+                                '需求日期': stmt['需求到貨日期'],
+                                '建議廠商': supplierNo,
+                                '送貨地址碼': OfficeNo,
+                                '備註': stmt['備註'],
+                                '備註摘要': '',
+                                '備註說明': stmt['專案名稱'] ? '[' + stmt['專案名稱'] + ']': '' + stmt['用途說明'],
+                                '附件檔案': attachmentsDict[stmtID],
+                            };
                         });
-                        return row;
+
+                        return rows.length > 0 ? rows : null;
+                    }).filter(group => group !== null);
+
+                    if (groups.length === 0) {
+                        throw new Error('No groups to generate CSV.');
+                    }
+
+                    const zip = new JSZip();
+
+                    const folderPromises = groups.map(async (group, index) => {
+                        const folder = zip.folder('請購單-' + (index + 1));
+                        const csvContent_1 = '\uFEFF' + outputColNames_1.join(",") + "\n" + group.map(row => outputColNames_1.map(colName => `"${row[colName]}"`).join(",")).join("\n");
+                        const csvContent_2 = '\uFEFF' + outputColNames_2.join(",") + "\n" + group.map(row => outputColNames_2.map(colName => `"${row[colName]}"`).join(",")).join("\n");
+                        folder.file('table_1.csv', csvContent_1);
+                        folder.file('table_2.csv', csvContent_2);
+
+                        const attachmentPromises = group.flatMap(row => {
+                            const attachments = row['附件檔案'];
+                            if (attachments) {
+                                return attachments.map(async attachmentPromise => {
+                                    const { file, filename } = await attachmentPromise;
+                                    console.log(`Adding file to zip: ${filename}, size: ${file.size}`);
+                                    folder.file(filename, file);
+                                });
+                            }
+                            return [];
+                        });
+
+                        await Promise.all(attachmentPromises);
                     });
 
-                    return rows.length > 0 ? rows : null;
-                }).filter(group => group !== null);
+                    await Promise.all(folderPromises);
 
-                if (groups.length === 0) {
-                    alert('No groups to generate CSV.');
-                    return;
+                    
+                    zip.generateAsync({ type: 'blob' })
+                        .then(function (content) {
+                            saveAs(content, '請購單-匯出日=' + new Date().toISOString().split('T')[0] + '.zip');
+                        })
+                        .catch((error) => {
+                            console.error('Error generating ZIP file:', error);
+                        });
                 }
-
-                const zip = new JSZip();
-
-                groups.forEach((group, index) => {
-                    let csvContent = "\uFEFF" + columnNames.join(",") + "\n"
-                        + group.map(row => 
-                            columnNames.map(column => `"${row[column]}"`).join(",")).join("\n");
-
-                    zip.file('group-' + (index + 1) + '.csv', csvContent);
-                });
-
-                zip.generateAsync({ type: 'blob' }).then(function (content) {
-                    saveAs(content, 'purchase_requests.zip');
-                });
+                catch (error) {
+                    console.error(error);
+                    alert(error);
+                    return
+                }
             }
-        });
+
+            // 為指定的 <select> OR <datalist> 設置選項，首先清除所有現有選項，然後添加一個預設選項和選項清單
+            function setupSelectOptions(selector, list, hasEmptyOption = false) {
+                // 清除 selector 中的所有子節點
+                while (selector.firstChild) selector.removeChild(selector.firstChild);
+
+                // 創建並添加一個預設選項，該選項被禁用且被隱藏
+                const defaultOption = new Option('請選擇一個選項', '', true, true);
+                defaultOption.hidden = !hasEmptyOption;
+                selector.appendChild(defaultOption);
+
+                // 創建一個文檔片段
+                let fragment = document.createDocumentFragment();
+
+                // 遍歷清單元素，創建並添加選項
+                Array.from(new Set(list)).forEach(columnName => fragment.appendChild(new Option(columnName, columnName)));
+
+                // 將文檔片段中的所有選項一次性添加到 selector 中
+                selector.appendChild(fragment);
+            }
+
+            function previewFile(file) {
+                const iframe = document.getElementById('filePreviewIframe');
+                const videoPlayer = document.getElementById('videoPlayer');
+                const audioPlayer = document.getElementById('audioPlayer');
+
+                // 隱藏所有播放器
+                iframe.classList.add('d-none');
+                videoPlayer.classList.add('d-none');
+                audioPlayer.classList.add('d-none');
+
+                
+                const fileUrl = URL.createObjectURL(file);
+
+                iframe.src = fileUrl;
+                iframe.classList.remove('d-none');
+
+                new bootstrap.Modal(document.getElementById('filePreviewModal')).show();
+                document.getElementById('filePreviewModal').addEventListener('hidden.bs.modal', () => {
+                    URL.revokeObjectURL(fileUrl);
+                    iframe.src = '';
+                    videoPlayer.src = '';
+                    audioPlayer.src = '';
+                    iframe.classList.add('d-none');
+                    videoPlayer.classList.add('d-none');
+                    audioPlayer.classList.add('d-none');
+                }, { once: true });
+
+            }
+
+            function startUp() {
+                Promise.all(resourceName_get.map(fetchResource)).then(() => {
+                    setupSelectOptions(document.getElementById('employee_datalist'), dataFrame.employees['工號簡碼'].values); //申請人
+                })
+                    .catch(error => console.error('Error during startup:', error));
+                
+                document.getElementById('search-btn').addEventListener('click', search, false);
+                document.getElementById('addGroup-btn').addEventListener('click', addGroup, false);
+                document.getElementById('generateCSV-btn').addEventListener('click', generateCSV, false);
+            }
+            window.addEventListener('DOMContentLoaded', startUp, false);
+        })();
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.7.1/dist/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 </body>
 </html>

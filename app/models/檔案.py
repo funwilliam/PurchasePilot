@@ -7,7 +7,7 @@ class 檔案(db.Model):
     __tablename__ = '檔案'
 
     默認主鍵 = Column(Uuid, primary_key=True, default=uuid.uuid4)
-    內容分類 = Column(String, server_default='其他', nullable=False) # 報價單 / 規格書 / 計畫書 / 其他
+    內容分類 = Column(String, server_default='其他文件', nullable=False) # 報價單 / 規格圖 / 計畫書 / 其他文件
     檔案說明 = Column(String)
     副檔名 = Column(String)
     檔案路徑 = Column(String)

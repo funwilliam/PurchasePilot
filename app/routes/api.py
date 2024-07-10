@@ -2,9 +2,9 @@ import os
 import uuid
 import traceback
 import mimetypes
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, send_file
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from app import utils, 供應商, 單位, 幣別, 員工, 專案, 捷拓廠區, 請購類型, 物料類別, 物料, 檔案, 請購明細, 物料更新紀錄
 api = Blueprint('api', __name__)
 
@@ -50,7 +50,17 @@ def get_materialType_resource():
 
 @api.route('/materials', methods=['GET'])
 def get_material_resource():
-    materials = 物料.query.all()
+    supplier_name = request.args.get('supplierName')
+    material_id = request.args.get('materialId')
+
+    # 構建查詢條件
+    filters = []
+    if supplier_name:
+        filters.append(物料.供應商簡稱 == supplier_name)
+    if material_id:
+        filters.append(物料.物料代號 == material_id)
+    materials = 物料.query.filter(and_(*filters)).all()
+
     return jsonify([material.to_dict() for material in materials])
 
 @api.route('/materials', methods=['PUT'])
@@ -151,22 +161,22 @@ def get_file_resource(prime_key):
         if not prime_key:
             return jsonify({'error': 'No Found', 'message': 'prime_key is empty.'}), 404
         
-        file_meta = 檔案.query.filter_by(默認主鍵=uuid.UUID(prime_key)).scalar()
-        if not file_meta:
+        file_record = 檔案.query.filter_by(默認主鍵=uuid.UUID(prime_key)).scalar()
+        if not file_record:
             return jsonify({'error': 'No Found', 'message': f'檔案 {prime_key} is not in the table.'}), 404
         
-        file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_meta.檔案路徑)
+        file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_record.檔案路徑)
         if os.path.exists(file_path):
             mimetype, _ = mimetypes.guess_type(file_path)
             return send_file(
                 file_path,
-                download_name=f'{file_meta.檔案說明}.{file_meta.副檔名}',
+                download_name=f'{file_record.檔案說明}.{file_record.副檔名}',
                 as_attachment=True,
                 mimetype=mimetype
             )
         else:
-            file_meta.delete()
-            raise Exception('This file was removed improperly. To maintain system stability, this data row will be deleted.')
+            file_record.delete()
+            raise FileNotFoundError('This file was removed improperly. To maintain system stability, this data row will be deleted.')
     except Exception as e:
         print(f"Error: {e}")
         traceback.print_exc()
@@ -178,25 +188,25 @@ def post_file_resource():
         file = request.files['file']
         if not file:
             return jsonify({'error': '未提供文件'}), 400
-        file_meta = 檔案.from_dict(request.form.to_dict())
+        file_record = 檔案.from_dict(request.form.to_dict())
         message = ''
 
-        if not file_meta.默認主鍵:
-            file_meta.默認主鍵 = uuid.uuid4()
-        if file_meta.快取 is None:
-            file_meta.快取 = False
-        elif file_meta.快取:
+        if not file_record.默認主鍵:
+            file_record.默認主鍵 = uuid.uuid4()
+        if file_record.快取 is None:
+            file_record.快取 = False
+        elif file_record.快取:
             message = '檔案暫存成功'
-            file_meta.檔案路徑 = os.path.join('未使用', f'{file_meta.默認主鍵}.{file_meta.副檔名}')
+            file_record.檔案路徑 = os.path.join('未使用', f'{file_record.默認主鍵}.{file_record.副檔名}')
         else:
             message = '檔案上傳成功'
-            file_meta.檔案路徑 = os.path.join(f'{file_meta.內容分類}', f'{file_meta.默認主鍵}.{file_meta.副檔名}')
+            file_record.檔案路徑 = os.path.join(f'{file_record.內容分類}', f'{file_record.默認主鍵}.{file_record.副檔名}')
 
-        file_meta.new()
-        file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_meta.檔案路徑)
+        file_record.new()
+        file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_record.檔案路徑)
         file.save(file_path)
 
-        return jsonify({'message': message, 'id': file_meta.默認主鍵, 'path': file_meta.檔案路徑}), 200
+        return jsonify({'message': message, 'id': file_record.默認主鍵, 'path': file_record.檔案路徑}), 200
     except Exception as e:
         print(f"Error: {e}")
         traceback.print_exc()
@@ -207,70 +217,70 @@ def patch_file_resource(prime_key):
     if not prime_key:
         return jsonify({'error': 'No Found', 'message': 'prime_key is empty.'}), 404
     
-    file_meta = 檔案.query.filter_by(默認主鍵=uuid.UUID(prime_key)).scalar()
+    file_record = 檔案.query.filter_by(默認主鍵=uuid.UUID(prime_key)).scalar()
     
-    if not file_meta:
+    if not file_record:
         return jsonify({'error': 'No Found', 'message': f'檔案 {prime_key} is not in the table.'}), 404
     
     try:
         file = request.files.get('file')
-        current_fileMeta = file_meta.to_dict()
+        current_fileMeta = file_record.to_dict()
         tmp = 檔案.from_dict(request.form.to_dict())
         if file:
-            file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_meta.檔案路徑)
+            file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_record.檔案路徑)
             if os.path.exists(file_path):
                 os.remove(file_path)
                 file.save(file_path)
             else:
-                file_meta.delete()
-                raise Exception('This file was removed improperly. To maintain system stability, this data row will be deleted.')
-        if tmp.內容分類 and tmp.內容分類 != file_meta.內容分類:
-            file_meta.內容分類 = tmp.內容分類
-            if not file_meta.快取:
-                old_file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_meta.檔案路徑)
+                file_record.delete()
+                raise FileNotFoundError('This file was removed improperly. To maintain system stability, this data row will be deleted.')
+        if tmp.內容分類 and tmp.內容分類 != file_record.內容分類:
+            file_record.內容分類 = tmp.內容分類
+            if not file_record.快取:
+                old_file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_record.檔案路徑)
                 if os.path.exists(old_file_path):
-                    file_meta.檔案路徑 = os.path.join(f'{file_meta.內容分類}', f'{file_meta.默認主鍵}.{file_meta.副檔名}')
-                    new_file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_meta.檔案路徑)
+                    file_record.檔案路徑 = os.path.join(f'{file_record.內容分類}', f'{file_record.默認主鍵}.{file_record.副檔名}')
+                    new_file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_record.檔案路徑)
                     os.rename(old_file_path, new_file_path)
                 else:
-                    file_meta.delete()
-                    raise Exception('This file was removed improperly. To maintain system stability, this data row will be deleted.')
+                    file_record.delete()
+                    raise FileNotFoundError('This file was removed improperly. To maintain system stability, this data row will be deleted.')
         if tmp.檔案說明:
-            file_meta.檔案說明 = tmp.檔案說明
-        if tmp.副檔名 and tmp.副檔名!= file_meta.副檔名:
-            file_meta.副檔名 = tmp.副檔名
-            old_relative_file_path = file_meta.檔案路徑
+            file_record.檔案說明 = tmp.檔案說明
+        if tmp.副檔名 and tmp.副檔名!= file_record.副檔名:
+            file_record.副檔名 = tmp.副檔名
+            old_relative_file_path = file_record.檔案路徑
             old_full_file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), old_relative_file_path)
 
             new_relative_file_path = f'{os.path.splitext(old_relative_file_path)[0]}.{tmp.副檔名}'
             new_full_file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), new_relative_file_path)
 
             os.rename(old_full_file_path, new_full_file_path)
-            file_meta.檔案路徑 = new_relative_file_path
-        if tmp.快取 is not None and tmp.快取 != file_meta.快取:
-            file_meta.快取 = tmp.快取
-            old_full_file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_meta.檔案路徑)
+            file_record.檔案路徑 = new_relative_file_path
+        if tmp.快取 is not None and tmp.快取 != file_record.快取:
+            file_record.快取 = tmp.快取
+            old_full_file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_record.檔案路徑)
             if os.path.exists(old_full_file_path):
                 new_relative_file_path = ''
                 new_full_file_path = ''
-                if file_meta.快取:
-                    new_relative_file_path = os.path.join('未使用', f'{file_meta.默認主鍵}.{file_meta.副檔名}')
+                if file_record.快取:
+                    new_relative_file_path = os.path.join('未使用', f'{file_record.默認主鍵}.{file_record.副檔名}')
                 elif tmp.內容分類:
-                    new_relative_file_path = os.path.join(f'{tmp.內容分類}', f'{file_meta.默認主鍵}.{file_meta.副檔名}')
+                    new_relative_file_path = os.path.join(f'{tmp.內容分類}', f'{file_record.默認主鍵}.{file_record.副檔名}')
                 else:
-                    new_relative_file_path = os.path.join(f'{file_meta.內容分類}', f'{file_meta.默認主鍵}.{file_meta.副檔名}')
+                    new_relative_file_path = os.path.join(f'{file_record.內容分類}', f'{file_record.默認主鍵}.{file_record.副檔名}')
                 new_full_file_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), new_relative_file_path)
                 os.rename(old_full_file_path, new_full_file_path)
-                file_meta.檔案路徑 = new_relative_file_path
+                file_record.檔案路徑 = new_relative_file_path
             else:
-                file_meta.delete()
-                raise Exception('This file was removed improperly. To maintain system stability, this data row will be deleted.')
+                file_record.delete()
+                raise FileNotFoundError('This file was removed improperly. To maintain system stability, this data row will be deleted.')
         if tmp.哈希值:
-            file_meta.哈希值 = tmp.哈希值
-        file_meta.update()
+            file_record.哈希值 = tmp.哈希值
+        file_record.update()
         
         changed_fields = {}
-        new_fileMeta = file_meta.to_dict()
+        new_fileMeta = file_record.to_dict()
         if current_fileMeta['內容分類'] != new_fileMeta['內容分類']: changed_fields['內容分類'] = [current_fileMeta['內容分類'], new_fileMeta['內容分類']]
         if current_fileMeta['檔案說明'] != new_fileMeta['檔案說明']: changed_fields['檔案說明'] = [current_fileMeta['檔案說明'], new_fileMeta['檔案說明']]
         if current_fileMeta['副檔名'] != new_fileMeta['副檔名']: changed_fields['副檔名'] = [current_fileMeta['副檔名'], new_fileMeta['副檔名']]
@@ -293,28 +303,28 @@ def check_FileExistence():
         prime_key = request.args.get('primeKey')
         hash_SHA256 = request.args.get('hash_SHA256')
 
-        file_meta = None
+        file_record = None
         if prime_key:
-            file_meta = 檔案.query.filter_by(默認主鍵=uuid.UUID(prime_key)).scalar()
+            file_record = 檔案.query.filter_by(默認主鍵=uuid.UUID(prime_key)).scalar()
         elif hash_SHA256:
-            file_meta = 檔案.query.filter_by(哈希值=hash_SHA256).scalar()
+            file_record = 檔案.query.filter_by(哈希值=hash_SHA256).scalar()
         else:
             return jsonify({'error': 'Missing searchable parameter'}), 400
         
-        if file_meta:
-            full_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_meta.檔案路徑)
+        if file_record:
+            full_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_record.檔案路徑)
             if not os.path.exists(full_path):
-                file_meta.delete()
-                raise Exception('This file was removed improperly. To maintain system stability, this data row will be deleted.')
+                file_record.delete()
+                raise FileNotFoundError('This file was removed improperly. To maintain system stability, this data row will be deleted.')
             else:
                 return jsonify({
                     'found': True,
-                    '默認主鍵': file_meta.默認主鍵,
-                    '內容分類': file_meta.內容分類,
-                    '檔案說明': file_meta.檔案說明,
-                    '副檔名': file_meta.副檔名,
-                    '檔案路徑': file_meta.檔案路徑,
-                    '快取': file_meta.快取,
+                    '默認主鍵': file_record.默認主鍵,
+                    '內容分類': file_record.內容分類,
+                    '檔案說明': file_record.檔案說明,
+                    '副檔名': file_record.副檔名,
+                    '檔案路徑': file_record.檔案路徑,
+                    '快取': file_record.快取,
                     }), 200
         else:
             return jsonify({'found': False}), 200
@@ -323,64 +333,131 @@ def check_FileExistence():
         traceback.print_exc()
         return jsonify({'error': 'Server error', 'message': str(e)}), 500
 
-@api.route('/convert', methods=['POST'])
-def convert_to_pdf():
-    file = request.files['file']
-    extension = request.form.get('副檔名')
-    file_open_app = request.form.get('檔案種類')
-
+@api.route('/files/<string:prime_key>/retrievePreviewPDF', methods=['GET'])
+def retrieve_preview_pdf(prime_key):
     try:
-        if file_open_app == 'Excel':
-            pdf_buf = utils.excel_to_pdf(file, extension)
-        elif file_open_app == 'Word':
-            pdf_buf = utils.word_to_pdf(file, extension)
-        elif file_open_app == 'PowerPoint':
-            pdf_buf = utils.ppt_to_pdf(file, extension)
-        else:
-            return jsonify({'error': 'Unsupported file type'}), 400
+        if not prime_key:
+            raise ValueError('prime_key is empty.')
 
-        if pdf_buf is not None:
-            return send_file(pdf_buf, download_name="output.pdf", as_attachment=True, mimetype='application/pdf')
-        else:
-            return jsonify({'error': 'Conversion failed'}), 500
+        file_record = 檔案.query.filter_by(默認主鍵=uuid.UUID(prime_key)).scalar()
+        if not file_record:
+            raise ValueError(f'檔案 {prime_key} is not in the table.')
+
+        full_path = os.path.join(os.getenv('FILES_STORAGE_FOLDER'), file_record.檔案路徑)
+        if not os.path.exists(full_path):
+            file_record.delete()
+            raise FileNotFoundError('This file was removed improperly. To maintain system stability, this data row will be deleted.')
+
+        pdf_buf = utils.office_doc_to_pdf(doc_path=full_path)
+        if not pdf_buf:
+            raise Exception('doc -> pdf conversion failed.')
+        
+        return send_file(pdf_buf, mimetype='application/pdf', as_attachment=True, download_name="preview.pdf")
+    
+    except ValueError as e:
+        print(f"ValueError: {e}")
+        traceback.print_exc()
+        return jsonify({'error': 'Bad Request', 'message': str(e)}), 400  # 400 Bad Request
+    except TypeError as e:
+        print(f"TypeError: {e}")
+        traceback.print_exc()
+        return jsonify({'error': 'Unsupported Media Type', 'message': str(e)}), 415  # 415 Unsupported Media Type
+    except FileNotFoundError as e:
+        print(f"FileNotFoundError: {e}")
+        traceback.print_exc()
+        return jsonify({'error': 'Not Found', 'message': str(e)}), 404  # 404 Not Found
     except Exception as e:
-        return jsonify({'error': 'Server error', 'message': str(e)}), 500
+        print(f"Error: {e}")
+        traceback.print_exc()
+        return jsonify({'error': 'Internal Server Error', 'message': str(e)}), 500  # 500 Internal Server Error
+
+@api.route('/fileToPdf', methods=['POST'])
+def convert_to_pdf():
+    try:
+        file = request.files.get('file')
+        extension = request.form.get('extension')
+
+        if not file:
+            raise ValueError('file is empty.')
+        if not extension:
+            raise ValueError('extension is empty.')
+        
+        pdf_buf = utils.office_doc_to_pdf(doc_stream=file, extension=extension)
+        if not pdf_buf:
+            raise Exception('doc -> pdf conversion failed.')
+        
+        return send_file(pdf_buf, mimetype='application/pdf', as_attachment=True, download_name="preview.pdf")
+
+    except ValueError as e:
+        print(f"ValueError: {e}")
+        traceback.print_exc()
+        return jsonify({'error': 'Bad Request', 'message': str(e)}), 400  # 400 Bad Request
+    except TypeError as e:
+        print(f"TypeError: {e}")
+        traceback.print_exc()
+        return jsonify({'error': 'Unsupported Media Type', 'message': str(e)}), 415  # 415 Unsupported Media Type
+    except Exception as e:
+        print(f"Error: {e}")
+        traceback.print_exc()
+        return jsonify({'error': 'Internal Server Error', 'message': str(e)}), 500  # 500 Internal Server Error
 
 @api.route('/purchaseRequestStmts', methods=['GET'])
 def get_purchaseRequestStmt_resource():
     try:
         # 獲取查詢參數
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-        status = request.args.get('status')
+        start_date = request.args.get('startDate')
+        end_date = request.args.get('endDate')
+        applier_id = request.args.get('applierId')
+        stmt_status = request.args.getlist('stmtStatus')
 
         # 設置台灣時區
         tz = utils.get_tz()
 
-        # 將日期字符串轉換為datetime對象
-        start_date = datetime.strptime(start_date, '%Y-%m-%d').replace(tzinfo=tz)
-        end_date = datetime.strptime(end_date, '%Y-%m-%d').replace(tzinfo=tz)
-
         # 構建查詢條件
         filters = []
-        if status:
-            filters.append(請購明細.狀態 == status)
+        if isinstance(stmt_status, str):
+            filters.append(請購明細.狀態 == stmt_status)
+        if isinstance(stmt_status, list):
+            filters.append(or_(*[請購明細.狀態 == status for status in stmt_status]))
+        if applier_id:
+            filters.append(請購明細.申請人工號簡碼 == applier_id)
         if start_date:
-            filters.append(請購明細.狀態更新時間戳 >= start_date)
+            date_str = datetime.strptime(start_date, '%Y-%m-%d').replace(tzinfo=tz)
+            filters.append(請購明細.狀態更新時間戳 >= date_str)
         if end_date:
-            filters.append(請購明細.狀態更新時間戳 <= end_date)
+            date_str = datetime.strptime(end_date, '%Y-%m-%d').replace(tzinfo=tz)
+            filters.append(請購明細.狀態更新時間戳 <= date_str + timedelta(days=1))
 
         # 查詢數據
-        records = 請購明細.query.filter(and_(*filters)).all()
+        stmt_records = 請購明細.query.filter(and_(*filters)).all()
 
         # 將結果轉換為字典
-        records_list = [record.to_dict() for record in records]
+        records_list = [record.to_dict() for record in stmt_records]
 
-        return jsonify(records_list), 200
+        return jsonify({
+            'message': 'success',
+            'queryResult': records_list,
+        }), 200
 
     except Exception as e:
         print(e)
         return jsonify({'error': 'Server error', 'message': str(e)}), 400
+
+# @api.route('/purchaseRequestStmts/<int:prime_key>/relatedFilePrime', methods=['GET'])
+# def get_purchaseRequestStmtFile_resource(prime_key):
+#     try:
+#         if not prime_key:
+#             raise ValueError('prime_key is empty.')
+
+#         stmt_record = 請購明細.query.filter_by(默認主鍵 =prime_key).scalar()
+#         if not stmt_record:
+#             raise ValueError(f'請購明細 {prime_key} is not in the table.')
+        
+#         file_records = stmt_record.附件檔案
+
+#     except Exception as e:
+#         print(f"Error: {e}")
+#         traceback.print_exc()
 
 @api.route('/purchaseRequestStmts', methods=['POST'])
 def post_purchaseRequestStmt_resource():
@@ -391,7 +468,7 @@ def post_purchaseRequestStmt_resource():
 
         if new_purchaseReqStmt.物料代號 == 'FREIGHT':
             if 供應商.query.filter_by(簡稱=new_purchaseReqStmt.供應商簡稱).scalar():
-                new_purchaseReqStmt.狀態 = '等待排單'
+                new_purchaseReqStmt.狀態 = '等待集單'
                 if not new_purchaseReqStmt.幣別 or not new_purchaseReqStmt.單價:
                     raise ValueError('Currency data and unit price data are required when purchase request is freight.')
                 new_purchaseReqStmt.單位 = 'PCE'
@@ -414,7 +491,7 @@ def post_purchaseRequestStmt_resource():
             if material.狀態 == '等待核准':
                 new_purchaseReqStmt.狀態 = '等待物料更新'
             elif material.狀態 == '正常使用':
-                new_purchaseReqStmt.狀態 = '等待排單'
+                new_purchaseReqStmt.狀態 = '等待集單'
             elif material.狀態 == '報價單過期':
                 '''等待添加處理邏輯'''
         else:  
@@ -453,7 +530,7 @@ def bind_file_purchaseRequestStmt():
     data = request.json
     stmt_pk = data.get('purchaseRequestStmtPrimeKey')
     file_pk = data.get('filePrimeKey')
-    print(request.args)
+    
     if not stmt_pk or not file_pk:
         required_fields = []
         if not stmt_pk:

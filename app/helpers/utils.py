@@ -15,7 +15,8 @@ import comtypes.client
 from PIL import ImageGrab, Image
 from pathlib import Path
 from ctypes import wintypes
-from typing import List, Dict, Any, Tuple, Literal, Optional
+from werkzeug.datastructures import FileStorage
+from typing import List, Dict, Any, Tuple, Literal, Optional, Callable
 from datetime import datetime
 from sqlalchemy.engine import Engine, URL
 from sqlalchemy import create_engine
@@ -62,7 +63,7 @@ class utils:
         return image.resize((max_width, height), Image.LANCZOS)
 
     @classmethod
-    def excel_to_images(cls, excel_file, extension: str) -> Optional[io.BytesIO]:
+    def excel_to_images(cls, excel_file: FileStorage, extension: str) -> Optional[io.BytesIO]:
         """
         Converts the first sheet of an Excel file to an image and returns it as a BytesIO object.
         
@@ -138,179 +139,90 @@ class utils:
                 os.remove(temp_excel_path)
             
             return None
+        
+    @classmethod
+    def office_doc_to_pdf(cls, doc_path: str | Path | None = None, doc_stream: FileStorage | io.BytesIO | None = None, extension: str | None = None) -> Optional[io.BytesIO]:
+        
+        convert_core_APPs = {
+            '.doc'  : 'Word',
+            '.docx' : 'Word',
+            '.rtf'  : 'Word',
+            '.xls'  : 'Excel',
+            '.xlsx' : 'Excel',
+            '.csv'  : 'Excel',
+            '.ppt'  : 'PowerPoint',
+            '.pptx' : 'PowerPoint',
+            '.pps'  : 'PowerPoint',
+            '.ppsx' : 'PowerPoint'
+        }
+        
+        remove_temp_doc_flag = False
+        temp_doc_path: Path
+        temp_pdf_path = Path('temp_output.pdf').resolve()
+        pdf_buffer: Optional[io.BytesIO] = None
 
-    # @classmethod
-    # def excel_to_pdf(cls, excel_file, extension: str) -> Optional[io.BytesIO]:
-    #     """
-    #     Converts the first sheet of an Excel file to a PDF and returns it as a BytesIO object.
-        
-    #     Parameters:
-    #     - excel_file: The uploaded Excel file.
-    #     - extension: The file extension of the uploaded Excel file.
-        
-    #     Returns:
-    #     - A BytesIO object containing the PDF, or None if the conversion fails.
-    #     """
-    #     temp_excel_path = f"temp_excel.{extension}"
-    #     temp_pdf_path = "temp_output.pdf"
-        
-    #     try:
-    #         # Save the uploaded file to a temporary path
-    #         excel_file.save(temp_excel_path)
-            
-    #         # Initialize COM for Excel automation
-    #         pythoncom.CoInitialize()
-    #         app = xw.App(visible=False, add_book=False)
-    #         workbook = app.books.open(temp_excel_path)
-    #         sheet = workbook.sheets[0]  # Use only the first sheet
-            
-    #         # Export the first sheet as a PDF
-    #         sheet.to_pdf(temp_pdf_path)
-            
-    #         # Read the PDF into a BytesIO object
-    #         with open(temp_pdf_path, "rb") as pdf_file:
-    #             pdf_buffer = io.BytesIO(pdf_file.read())
-            
-    #         # Clean up
-    #         workbook.close()
-    #         app.quit()
-    #         pythoncom.CoUninitialize()
-    #         os.remove(temp_excel_path)
-    #         os.remove(temp_pdf_path)
-            
-    #         return pdf_buffer
-        
-    #     except Exception as e:
-    #         print(f"Error: {e}")
-    #         traceback.print_exc()
-            
-    #         # Clean up in case of an error
-    #         if 'workbook' in locals():
-    #             workbook.close()
-    #         if 'app' in locals():
-    #             app.quit()
-    #         pythoncom.CoUninitialize()
-    #         if os.path.exists(temp_excel_path):
-    #             os.remove(temp_excel_path)
-    #         if os.path.exists(temp_pdf_path):
-    #             os.remove(temp_pdf_path)
-            
-    #         return None
-        
-    @classmethod
-    def excel_to_pdf(cls, excel_file, extension: str) -> Optional[io.BytesIO]:
-        temp_excel_path = f"temp_excel.{extension}"
-        temp_pdf_path = "temp_output.pdf"
-        
         try:
-            # Save the uploaded file to a temporary path
-            excel_file.save(temp_excel_path)
+            if doc_path:
+                if isinstance(doc_path, (str, Path)):
+                    doc_path = Path(doc_path)
+                    if doc_path.is_file():
+                        temp_doc_path = doc_path.resolve()
+                    else:
+                        raise FileNotFoundError('Provided doc_path does not point to a valid file.')
+                else:
+                    raise TypeError('doc_path is neither a string nor a Path object.')
+            elif doc_stream and extension:
+                temp_doc_path = Path(f'temp_doc.{extension}').resolve()
+                if isinstance(doc_stream, FileStorage):
+                    doc_stream.save(temp_doc_path)
+                elif isinstance(doc_stream, io.BytesIO):
+                    with open(temp_doc_path, 'wb') as f:
+                        f.write(doc_stream.getvalue())
+                else:
+                    raise TypeError('doc_stream is neither a FileStorage nor a BytesIO object.')
+                remove_temp_doc_flag = True
+            else:
+                raise ValueError('Either doc_path or doc_stream with extension must be provided.')
             
-            # Convert Excel to PDF
-            pythoncom.CoInitialize()
-            excel = comtypes.client.CreateObject('Excel.Application')
-            workbook = excel.Workbooks.Open(os.path.abspath(temp_excel_path))
-            workbook.ExportAsFixedFormat(0, os.path.abspath(temp_pdf_path))  # 0 for xlTypePDF
-            workbook.Close(False)
-            excel.Quit()
+            app = convert_core_APPs.get(temp_doc_path.suffix, None)
+            if app == 'Word':
+                # Convert Word to PDF
+                pythoncom.CoInitialize()
+                word = comtypes.client.CreateObject('Word.Application')
+                doc = word.Documents.Open(str(temp_doc_path))
+                doc.SaveAs(str(temp_pdf_path), FileFormat=17)  # 17 for wdFormatPDF
+                doc.Close()
+                word.Quit()
+            elif app == 'Excel':
+                # Convert doc to PDF
+                pythoncom.CoInitialize()
+                excel = comtypes.client.CreateObject('Excel.Application')
+                workbook = excel.Workbooks.Open(str(temp_doc_path))
+                workbook.ExportAsFixedFormat(0, str(temp_pdf_path))  # 0 for xlTypePDF
+                workbook.Close(False)
+                excel.Quit()
+            elif app == 'PowerPoint':
+                # Convert PowerPoint to PDF
+                pythoncom.CoInitialize()
+                powerpoint = comtypes.client.CreateObject('PowerPoint.Application')
+                deck = powerpoint.Presentations.Open(str(temp_doc_path))
+                deck.SaveAs(str(temp_pdf_path), FileFormat=32)  # 32 for ppSaveAsPDF
+                deck.Close()
+                powerpoint.Quit()
+            else:
+                raise ValueError('Unsupported file type')
             
             # Read the PDF into a BytesIO object
             with open(temp_pdf_path, "rb") as pdf_file:
                 pdf_buffer = io.BytesIO(pdf_file.read())
-            
-            # Clean up
-            os.remove(temp_excel_path)
-            os.remove(temp_pdf_path)
-            
-            return pdf_buffer
         
         except Exception as e:
-            print(f"Error: {e}")
-            traceback.print_exc()
+            raise e
             
-            # Clean up in case of an error
-            if os.path.exists(temp_excel_path):
-                os.remove(temp_excel_path)
-            if os.path.exists(temp_pdf_path):
-                os.remove(temp_pdf_path)
-            
-            return None
-
-    @classmethod
-    def ppt_to_pdf(cls, ppt_file, extension: str) -> Optional[io.BytesIO]:
-        temp_ppt_path = f"temp_ppt.{extension}"
-        temp_pdf_path = "temp_output.pdf"
-        
-        try:
-            # Save the uploaded file to a temporary path
-            ppt_file.save(temp_ppt_path)
-            
-            # Convert PowerPoint to PDF
-            pythoncom.CoInitialize()
-            powerpoint = comtypes.client.CreateObject('PowerPoint.Application')
-            deck = powerpoint.Presentations.Open(os.path.abspath(temp_ppt_path))
-            deck.SaveAs(os.path.abspath(temp_pdf_path), FileFormat=32)  # 32 for ppSaveAsPDF
-            deck.Close()
-            powerpoint.Quit()
-            
-            # Read the PDF into a BytesIO object
-            with open(temp_pdf_path, "rb") as pdf_file:
-                pdf_buffer = io.BytesIO(pdf_file.read())
-            
+        finally:
             # Clean up
-            os.remove(temp_ppt_path)
-            os.remove(temp_pdf_path)
-            
-            return pdf_buffer
+            if remove_temp_doc_flag:
+                temp_doc_path.unlink(missing_ok=True)
+            temp_pdf_path.unlink(missing_ok=True)
         
-        except Exception as e:
-            print(f"Error: {e}")
-            traceback.print_exc()
-            
-            # Clean up in case of an error
-            if os.path.exists(temp_ppt_path):
-                os.remove(temp_ppt_path)
-            if os.path.exists(temp_pdf_path):
-                os.remove(temp_pdf_path)
-            
-            return None
-        
-    @classmethod
-    def word_to_pdf(cls, word_file, extension: str) -> Optional[io.BytesIO]:
-        temp_word_path = f"temp_word.{extension}"
-        temp_pdf_path = "temp_output.pdf"
-        
-        try:
-            # Save the uploaded file to a temporary path
-            word_file.save(temp_word_path)
-            
-            # Convert Word to PDF
-            pythoncom.CoInitialize()
-            word = comtypes.client.CreateObject('Word.Application')
-            doc = word.Documents.Open(os.path.abspath(temp_word_path))
-            doc.SaveAs(os.path.abspath(temp_pdf_path), FileFormat=17)  # 17 for wdFormatPDF
-            doc.Close()
-            word.Quit()
-            
-            # Read the PDF into a BytesIO object
-            with open(temp_pdf_path, "rb") as pdf_file:
-                pdf_buffer = io.BytesIO(pdf_file.read())
-            
-            # Clean up
-            os.remove(temp_word_path)
-            os.remove(temp_pdf_path)
-            
-            return pdf_buffer
-        
-        except Exception as e:
-            print(f"Error: {e}")
-            traceback.print_exc()
-            
-            # Clean up in case of an error
-            if os.path.exists(temp_word_path):
-                os.remove(temp_word_path)
-            if os.path.exists(temp_pdf_path):
-                os.remove(temp_pdf_path)
-            
-            return None
-        
+        return pdf_buffer

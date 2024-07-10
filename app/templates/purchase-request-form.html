@@ -7,11 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-PI8n5gCcz9cQqQXm3PEtDuPG8qx9oFsFctPg0S5zb8g=" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI=" crossorigin="anonymous">
     <style>
         :root {
             font-family: Jost, "Microsoft JhengHei", 微軟正黑體, 微软雅黑, sans-serif, 'Noto Sans TC', -apple-system, Arial, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Source Han Sans CN', 'Source Han Sans SC', 'Microsoft YaHei', 'WenQuanYi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;
@@ -152,7 +149,7 @@
                                         </svg>
                                     </button>
                                 </div>
-                                <input type="text" class="form-control" id="Input_materialId" list="material_datalist">
+                                <input type="text" class="form-control" id="Input_materialId" maxlength="38" list="material_datalist">
                                 <datalist id="material_datalist"></datalist>
                             </div>
                             <div class="m-2 p-1">
@@ -287,13 +284,13 @@
                         <div class="col-6">
                             <div class="m-2 p-1">
                                 <label for="Input_description" class="form-label">用途說明</label>
-                                <textarea id="Input_description" class="form-control" rows="4" placeholder="*Note簽核看的*"></textarea>
+                                <textarea id="Input_description" class="form-control" rows="4" maxlength="50" placeholder="*Note簽核看的*"></textarea>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="m-2 p-1">
                                 <label for="Input_remarks" class="form-label">請購備註</label>
-                                <textarea id="Input_remarks" class="form-control" rows="4" placeholder="*資材部看的*"></textarea>
+                                <textarea id="Input_remarks" class="form-control" rows="4" maxlength="50" placeholder="*資材部看的*"></textarea>
                             </div>
                         </div>
                     </div>
@@ -325,7 +322,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <iframe id="filePreviewIframe" width="100%" height="600px"></iframe>
+                    <iframe id="filePreviewIframe" width="100%" height="600px" class="d-none"></iframe>
+                    <video id="videoPlayer" controls class="w-100 d-none">
+                        Your browser does not support the video tag.
+                    </video>
+                    <audio id="audioPlayer" controls class="w-100 d-none">
+                        Your browser does not support the audio element.
+                    </audio>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
@@ -334,8 +337,8 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/danfojs@1.1.2/lib/bundle.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/danfojs@1.1.2/lib/bundle.js" integrity="sha256-b4/iTif0LxfGrbF3LLsHwg852tbYcHbLpHMJnY3PsTo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha256-CDOy6cOibCWEdsRiZuaHf8dSGGJRYuBGC+mjoJimHGw=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script>
         (() => {
@@ -397,7 +400,7 @@
             function createFileBuffer() {
                 return {
                     默認主鍵: '',
-                    內容分類: '其他',
+                    內容分類: '其他文件',
                     檔案說明: '',
                     副檔名: '',
                     檔案路徑: '',
@@ -438,7 +441,8 @@
             //         if (data.error) {
             //             console.error('Error:', data.error);
             //             alert('請求提交失敗：' + data.error);
-            //         } else {
+            //         }
+            //         else {
             //             console.log('Success:', data);
             //             alert('請求提交成功！' + data.message);
             //         }
@@ -458,9 +462,11 @@
                     // 根據條件添加查詢參數
                     if (primeKey) {
                         url.searchParams.append('primeKey', primeKey);
-                    } else if (hash) {
+                    }
+                    else if (hash) {
                         url.searchParams.append('hash_SHA256', hash);
-                    } else {
+                    }
+                    else {
                         throw new Error('不明的查詢條件');
                     }
 
@@ -489,7 +495,8 @@
                         const data = await response.json();
                         if (data.error) throw new Error(data.error);
                         else throw new Error('Unknown error in JSON response');
-                    } else if (contentType) {
+                    }
+                    else if (contentType) {
                         let blob = await response.blob();
                         let contentDisposition = response.headers.get('Content-Disposition');
                         let filename = '原檔名遺失';
@@ -498,7 +505,8 @@
                             let match = contentDisposition.match(/filename\*=(?:UTF-8'')?([^;\n]*)/);
                             if (match && match[1]) {
                                 filename = decodeURIComponent(match[1].replace(/['"]/g, ''));
-                            } else {
+                            }
+                            else {
                                 // 處理 filename (無法解析中文)
                                 match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
                                 if (match && match[1]) {
@@ -507,7 +515,8 @@
                             }
                         }
                         return new File([blob], filename, { type: contentType });
-                    } else
+                    }
+                    else
                         throw new Error('Unknown response type');
                 } catch (error) {
                     console.error('Error: 傳輸伺服器附件時發生錯誤\n' + error);
@@ -529,7 +538,8 @@
 
                     if (response.ok) {
                         return {'status': '上傳成功', 'message': data.message, 'id': data.id, 'path': data.path};
-                    } else {
+                    }
+                    else {
                         throw new Error(data.error);
                     }
                     
@@ -561,7 +571,8 @@
                         let message = [];
                         Object.entries(data.updatedFields).forEach(([key, value]) => key!='快取' && message.push(`${key}: ${value[0] || 'NULL'} -> ${value[1] || 'NULL'}`));
                         return {'status': '更新成功', 'message': `附件元數據更新成功！\n已更新的欄位信息:\n${message.join('\n')}`};
-                    } else {
+                    }
+                    else {
                         throw new Error(data.error);
                     }
                     return data;
@@ -571,10 +582,35 @@
                 }
             }
 
+            // 從後端取得預覽用的pdf檔案(相依於Office，限定相關檔案類型)
+            async function fetchPreviewFile(primeKey) {
+                try {
+                    const url = new URL(`/api/files/${primeKey}/retrievePreviewPDF`, window.location.origin);
+                    const response = await fetch(url);
+                    
+                    const contentType = response.headers.get('Content-Type');
+                    if (contentType && contentType.includes('application/pdf')) {
+                        let previewFile = await response.blob();
+                        return {'status': '轉檔成功', 'file': previewFile};
+                    }
+                    else if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        if (data.error) throw new Error(data.message || data.error);
+                        else throw new Error('Unknown error in JSON response');
+                    }
+                    else
+                        throw new Error('Unknown response type');
+                } catch (error) {
+                    console.error('轉檔為 PDF 時發生錯誤\n' + error);
+                    alert('轉檔為 PDF 時發生錯誤：\n' + error.message);
+                    return {'status': '轉檔失敗', 'file': null, 'message': error.message};
+                }
+            }
+
             // 轉檔為可以預覽的pdf檔
             async function convertToPreviewFile(formData) {
                 try {
-                    const url = new URL('/api/convert', window.location.origin);
+                    const url = new URL('/api/fileToPdf', window.location.origin);
                     const response = await fetch(url, {
                         method: 'POST',
                         body: formData
@@ -583,17 +619,19 @@
                     const contentType = response.headers.get('Content-Type');
                     if (contentType && contentType.includes('application/pdf')) {
                         let previewFile = await response.blob();
-                        return previewFile;
-                    } else if (contentType && contentType.includes('application/json')) {
+                        return {'status': '轉檔成功', 'file': previewFile};
+                    }
+                    else if (contentType && contentType.includes('application/json')) {
                         const data = await response.json();
                         if (data.error) throw new Error(data.error);
                         else throw new Error('Unknown error in JSON response');
-                    } else
+                    }
+                    else
                         throw new Error('Unknown response type');
                 } catch (error) {
-                    console.error('Error: 轉換為 PDF 時發生錯誤\n' + error);
-                    alert('轉換為 PDF 時發生錯誤：' + error.message);
-                    return null;
+                    console.error('轉檔為 PDF 時發生錯誤\n' + error);
+                    alert('轉檔為 PDF 時發生錯誤：\n' + error.message);
+                    return {'status': '轉檔失敗', 'file': null, 'message': error.message};
                 }
             }
 
@@ -611,7 +649,8 @@
                     const data = await response.json();
                     if (response.ok) {
                         return {'status': '上傳成功', 'message': data.message, 'id': data.id, 'reqStmtStatus': data.reqStmtStatus};
-                    } else {
+                    }
+                    else {
                         throw new Error(data.error);
                     }
                 } catch (error) {
@@ -640,7 +679,8 @@
                     const data = await response.json();
                     if (response.ok) {
                         return {'status': '綁定成功', 'message': data.message};
-                    } else {
+                    }
+                    else {
                         throw new Error(data.error);
                     }
                 } catch (error) {
@@ -668,7 +708,8 @@
             //     if (buffer.物料代號 === 'FREIGHT') {
             //         let query = dataFrame.suppliers.loc({ rows: dataFrame.suppliers['簡稱'].eq(buffer.供應商簡稱)});
             //         if (query.shape[0] !== 1) return [false, '供應商在資料庫不存在或重複'];
-            //     } else if (buffer.供應商簡稱 && buffer.物料代號) {
+            //     }
+            //     else if (buffer.供應商簡稱 && buffer.物料代號) {
             //         let query = dataFrame.materials.loc({ rows: dataFrame.materials['物料代號'].eq(buffer.物料代號).and(dataFrame.materials['供應商簡稱'].eq(buffer.供應商簡稱)) });
             //         if (query.shape[0] !== 1) return [false, '物料不存在'];
             //     }
@@ -716,7 +757,8 @@
                         'status': '成功',
                         'message': '',
                     };
-                } else {
+                }
+                else {
                     return {
                         'status': '失敗',
                         'message': warnings.join('\n'),
@@ -761,7 +803,8 @@
                                         const updateAttachmentMetaReturn =  await updateAttachmentMeta(formData, buffer.默認主鍵);
                                         if (updateAttachmentMetaReturn.status === '更新失敗') throw new Error(updateAttachmentMetaReturn.message);
                                     }
-                                } else if (buffer.ext.檔案) {
+                                }
+                                else if (buffer.ext.檔案) {
                                     formData.append('file', buffer.ext.檔案);
                                     formData.append('內容分類', buffer.內容分類);
                                     formData.append('檔案說明', buffer.檔案說明);
@@ -771,7 +814,8 @@
                                     if (uploadAttachmentReturn.status === '上傳失敗') throw new Error(uploadAttachmentReturn.message);
                                     buffer.默認主鍵 = uploadAttachmentReturn.id;
                                 }
-                            } else if (buffer.ext.檔案) {
+                            }
+                            else if (buffer.ext.檔案) {
                                 formData.append('file', buffer.ext.檔案);
                                 formData.append('內容分類', buffer.內容分類);
                                 formData.append('檔案說明', buffer.檔案說明);
@@ -838,7 +882,8 @@
 
                     this.reset();
                     window.location.reload();                
-                } else {
+                }
+                else {
                     let tmp = `
                         [附件檢查]\n
                         ${failedAttachmentChecks}
@@ -1120,7 +1165,8 @@
                     wav: { icon: 'bi-file-earmark-music-fill', type: 'Audio', color: '#E91E63' },           // Magenta
                     zip: { icon: 'bi-file-earmark-zip-fill', type: 'Archive', color: '#795548' },           // Brown
                     rar: { icon: 'bi-file-earmark-zip-fill', type: 'Archive', color: '#795548' },           // Brown
-                    csv: { icon: 'bi-file-earmark-spreadsheet-fill', type: 'CSV', color: '#388E3C' }        // Green
+                    csv: { icon: 'bi-file-earmark-spreadsheet-fill', type: 'CSV', color: '#388E3C' },       // Green
+                    txt: { icon: 'bi-file-earmark-text-fill', type: 'Text', color: '#616161' }              // Grey
                 };
                 const defaultReturn = { icon: 'bi-file-earmark-fill', type: 'File', color: '#616161' };     // Grey for default
                 return fileDetails[extension] || defaultReturn;
@@ -1129,17 +1175,60 @@
             // 預覽檔案
             function previewFile(buffer) {
                 const iframe = document.getElementById('filePreviewIframe');
+                const videoPlayer = document.getElementById('videoPlayer');
+                const audioPlayer = document.getElementById('audioPlayer');
+
+                // 隱藏所有播放器
+                iframe.classList.add('d-none');
+                videoPlayer.classList.add('d-none');
+                audioPlayer.classList.add('d-none');
+
                 if (buffer.ext.預覽檔案狀態 === 'success') {
-                    iframe.src = URL.createObjectURL(buffer.ext.預覽檔案);
-                    iframe.onload = () => URL.revokeObjectURL(iframe.src);
+                    const fileUrl = URL.createObjectURL(buffer.ext.預覽檔案);
+                    
+                    switch(buffer.ext.檔案種類.toLowerCase()) {
+                        case 'pdf':
+                        case 'image':
+                        case 'word':
+                        case 'powerpoint':
+                        case 'excel':
+                        case 'text':
+                            iframe.src = fileUrl;
+                            iframe.classList.remove('d-none');
+                            break;
+                        case 'video':
+                            videoPlayer.src = fileUrl;
+                            videoPlayer.load();
+                            videoPlayer.classList.remove('d-none');
+                            break;
+                        case 'audio':
+                            audioPlayer.src = fileUrl;
+                            audioPlayer.load();
+                            audioPlayer.classList.remove('d-none');
+                            break;
+                        default:
+                            return;
+                    }
+
                     new bootstrap.Modal(document.getElementById('filePreviewModal')).show();
+                    document.getElementById('filePreviewModal').addEventListener('hidden.bs.modal', () => {
+                        URL.revokeObjectURL(fileUrl);
+                        iframe.src = '';
+                        videoPlayer.src = '';
+                        audioPlayer.src = '';
+                        iframe.classList.add('d-none');
+                        videoPlayer.classList.add('d-none');
+                        audioPlayer.classList.add('d-none');
+                    }, { once: true });
                 }
                 else if (buffer.ext.預覽檔案狀態 === 'loading')
                     alert('預覽圖載入中，請稍後再試');
-                else if (buffer.ext.預覽檔案狀態 === 'unavailable')
+                else if (buffer.ext.預覽檔案狀態 === 'unsupported')
                     alert('此檔案格式不支援預覽');
                 else if (buffer.ext.預覽檔案狀態 === 'init')
                     alert('檔案處理中，請稍後再試');
+                else if (buffer.ext.預覽檔案狀態 === 'failed')
+                    alert('預覽圖轉檔失敗');
             }
 
             // 計算檔案SHA-256值
@@ -1160,6 +1249,9 @@
 
             // 匯入檔案處理
             async function handleFiles(files) {
+                // 輸入參數檢查
+                if (!files) return;
+
                 const fileList = document.getElementById('fileList');   
                 const promises = Array.from(files).map(async (file, i) => {
                     const current_ptr = fileBuffer_ptr;
@@ -1176,7 +1268,7 @@
                     buffer.ext.圖示顏色 = iconConf.color;
                     buffer.ext.預覽檔案 = null;
                     buffer.ext.預覽檔案狀態 = 'init';
-                    buffer.內容分類 = '其他';
+                    buffer.內容分類 = '其他文件';
                     buffer.檔案說明 = nameWithoutExtension;
                     buffer.副檔名 = extension;
 
@@ -1198,11 +1290,11 @@
                                     <div>內容分類:</div>
                                     <div id="file-type-${current_ptr}">
                                         <select id="file-type-selector-${current_ptr}" class="fileContentType-select form-select form-select-sm" value="">
-                                            <option value="" hidden>請選擇檔案分類 （預設選項 = "其他"）</option>
+                                            <option value="" hidden>請選擇檔案分類 （預設選項 = "其他文件"）</option>
                                             <option value="報價單">報價單</option>
-                                            <option value="規格書">規格書</option>
+                                            <option value="規格圖">規格圖</option>
                                             <option value="計畫書">計畫書</option>
-                                            <option value="其他">其他</option>
+                                            <option value="其他文件">其他文件</option>
                                         </select>
                                     </div>
                                     <div>狀態/路徑:</div>
@@ -1248,7 +1340,8 @@
                         buffer.檔案路徑 = checkFileExistenceReturn.檔案路徑;
                         fileTypeSelector.value = checkFileExistenceReturn.內容分類 || '';
                         fileStatus.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> ${checkFileExistenceReturn.檔案路徑}`;
-                    } else {
+                    }
+                    else {
                         // 伺服器暫存
                         fileStatus.innerHTML = `<i class="bi bi-upload text-info me-2"></i>正在上傳檔案...`;
                         const formData = new FormData();
@@ -1265,27 +1358,52 @@
                         fileStatus.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> ${cacheFileReturn.path}`;
                     }
 
-                    // 預覽
-                    if (buffer.ext.檔案種類 === 'PDF' || buffer.ext.檔案種類 === 'Image'){
-                        buffer.ext.預覽檔案 = buffer.ext.檔案;
-                        buffer.ext.預覽檔案狀態 = 'success';
-                    }
-                    else if(buffer.ext.檔案種類 === 'Word' || buffer.ext.檔案種類 === 'PowerPoint' || buffer.ext.檔案種類 === 'Excel') {
-                        buffer.ext.預覽檔案 = null;
-                        buffer.ext.預覽檔案狀態 = 'loading';
+                    // 預覽檔案處理
+                    switch(buffer.ext.檔案種類.toLowerCase()) {
+                        case 'PDF'.toLowerCase():
+                        case 'Image'.toLowerCase():
+                        case 'Video'.toLowerCase():
+                        case 'Audio'.toLowerCase():
+                        case 'Text'.toLowerCase():
+                            buffer.ext.預覽檔案 = buffer.ext.檔案;
+                            buffer.ext.預覽檔案狀態 = 'success';
+                            break;
+                        case 'Word'.toLowerCase():
+                        case 'PowerPoint'.toLowerCase():
+                        case 'Excel'.toLowerCase():
+                            buffer.ext.預覽檔案 = null;
+                            buffer.ext.預覽檔案狀態 = 'loading';
+                            if (buffer.默認主鍵) {
+                                let = fetchPreviewFileReturn = await fetchPreviewFile(buffer.默認主鍵)
+                                if (fetchPreviewFileReturn.file) {
+                                    buffer.ext.預覽檔案 = fetchPreviewFileReturn.file;
+                                    buffer.ext.預覽檔案狀態 = 'success';
+                                }
+                                else {
+                                    buffer.ext.預覽檔案 = null;
+                                    buffer.ext.預覽檔案狀態 = 'failed';
+                                }
+                            }
+                            else {
+                                const formData = new FormData();
+                                formData.append('file', buffer.ext.檔案);
+                                formData.append('extension', buffer.副檔名);
 
-                        const formData = new FormData();
-                        formData.append('file', buffer.ext.檔案);
-                        formData.append('檔案種類', buffer.ext.檔案種類);
-                        formData.append('副檔名', buffer.副檔名);
-
-                        let convertToPreviewFileReturn = await convertToPreviewFile(formData);
-                        buffer.ext.預覽檔案 = convertToPreviewFileReturn;
-                        buffer.ext.預覽檔案狀態 = 'success';
-                    }
-                    else {
-                        buffer.ext.預覽檔案 = null;
-                        buffer.ext.預覽檔案狀態 = 'unavailable';
+                                let convertToPreviewFileReturn = await convertToPreviewFile(formData);
+                                if (convertToPreviewFileReturn.file) {
+                                    buffer.ext.預覽檔案 = convertToPreviewFileReturn.file;
+                                    buffer.ext.預覽檔案狀態 = 'success';
+                                }
+                                else {
+                                    buffer.ext.預覽檔案 = null;
+                                    buffer.ext.預覽檔案狀態 = 'failed';
+                                }
+                            }
+                            break;
+                        default:
+                            buffer.ext.預覽檔案 = null;
+                            buffer.ext.預覽檔案狀態 = 'unsupported';
+                            break;
                     }
                 });
                 await Promise.all(promises);

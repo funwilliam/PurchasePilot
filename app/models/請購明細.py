@@ -41,6 +41,11 @@ class 請購明細(db.Model):
     # 多對多關係
     附件檔案 = relationship("檔案", secondary='Mapping_請購明細_檔案', back_populates='請購明細')
 
+    def to_dict(self):
+        data = super().to_dict()
+        data['附件檔案'] = [file.to_dict() for file in self.附件檔案] if self.附件檔案 else []
+        return data
+
 
 # 定義關聯表
 Mapping請購明細檔案 = Table(
