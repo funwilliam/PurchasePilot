@@ -23,55 +23,60 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="mt-5 mb-2 fw-bold">請購明細彙整</h1>
-        <h4 class="my-1" style="opacity: .9;">匯出ERP請購系統csv格式</h3>
-        <!-- 搜索條件 -->
-        <form id="filter-form" class="my-4" autocomplete="off">
-            <div class="row">
-                <div class="col-md-2 pe-4">
-                    <label for="Input-startDate" class="form-label fw-bold m-1">起始日</label>
-                    <input type="date" id="Input-startDate" name="start_date" class="form-control">
-                </div>
-                <div class="col-md-2 px-4">
-                    <label for="Input-endDate" class="form-label fw-bold m-1">結束日</label>
-                    <input type="date" id="Input-endDate" name="end_date" class="form-control">
-                </div>
-                <div class="col-md-2 px-4">
-                    <label for="Input_stmtStatus" class="form-label fw-bold">狀態</label>
-                    <select id="Input_stmtStatus" class="form-select" value="" aria-label="請購狀態選單">
-                        <option value="">[待處理]</option>
-                        <!-- <option value="等待物料更新">等待物料更新</option> -->
-                        <option value="等待集單">等待集單</option>
-                        <option value="退件">退件</option>
-                        <!-- <option value="簽核中">簽核中</option>
-                        <option value="採購&等待交貨">採購&等待交貨</option>
-                        <option value="部分驗收">部分驗收</option>
-                        <option value="等待驗收">等待驗收</option>
-                        <option value="已結案">已結案</option> -->
-                    </select>
-                </div>
-                <div class="col-md-2 px-4">
-                    <label for="Input_applier" class="form-label fw-bold">申請人工號</label>
-                    <input type="text" class="form-control" id="Input_applier" placeholder="Ex. 001" list="employee_datalist">
-                    <datalist id="employee_datalist"></datalist>
-                </div>
-                <div class="col-md-1 d-flex align-items-center justify-content-center">
-                    <button id="search-btn" type="button" class="btn btn-primary">搜尋</button>
-                </div>
-                <div class="col-md-3"></div>
+        <header class="m-2">
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn p-0" style="width: 50px; height: 50px;" onclick="window.location.href='/';" aria-label="Return to homepage">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-50 h-50 bi bi-reply-fill text-secondary" viewBox="0 0 16 16" style="opacity: .45;">
+                        <path d="M5.921 11.9 1.353 8.62a.72.72 0 0 1 0-1.238L5.921 4.1A.716.716 0 0 1 7 4.719V6c1.5 0 6 0 7 8-2.5-4.5-7-4-7-4v1.281c0 .56-.606.898-1.079.62z" />
+                    </svg>
+                </button>
             </div>
-        </form>
+            <h1 class="my-2 fw-bold">請購明細彙整</h1>
+            <h4 class="my-1" style="opacity: .9;">匯出ERP請購系統csv格式</h4>
+        </header>
+        <main>
+            <!-- 搜索條件 -->
+            <form id="filter-form" class="my-4" autocomplete="off">
+                <div class="row">
+                    <div class="col-md-2 pe-4">
+                        <label for="Input-startDate" class="form-label fw-bold m-1">起始日</label>
+                        <input type="date" id="Input-startDate" name="start_date" class="form-control">
+                    </div>
+                    <div class="col-md-2 px-4">
+                        <label for="Input-endDate" class="form-label fw-bold m-1">結束日</label>
+                        <input type="date" id="Input-endDate" name="end_date" class="form-control">
+                    </div>
+                    <div class="col-md-2 px-4">
+                        <label for="Input_stmtStatus" class="form-label fw-bold">狀態</label>
+                        <select id="Input_stmtStatus" class="form-select" value="" aria-label="請購狀態選單">
+                            <option value="">[待處理]</option>
+                            <option value="正在集單">正在集單</option>
+                            <option value="退件等待處置">退件等待處置</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 px-4">
+                        <label for="Input_applier" class="form-label fw-bold">申請人工號</label>
+                        <input type="text" class="form-control" id="Input_applier" placeholder="Ex. 001" list="employee_datalist">
+                        <datalist id="employee_datalist"></datalist>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-center justify-content-center">
+                        <button id="search-btn" type="button" class="btn btn-primary d-none">搜尋</button>
+                    </div>
+                    <div class="col-md-3"></div>
+                </div>
+            </form>
 
-        <!-- 增加分組按鈕 -->
-        <button id="addGroup-btn" class="btn btn-primary mt-3">新增群組</button>
+            <!-- 增加分組按鈕 -->
+            <button id="addGroup-btn" class="btn btn-primary mt-3">新增群組</button>
 
-        <!-- 資料清單 -->
-        <div id="records-container" class="mt-4">
-            <!-- 清單將動態填充 -->
-        </div>
+            <!-- 資料清單 -->
+            <div id="records-container" class="mt-4">
+                <!-- 清單將動態填充 -->
+            </div>
 
-        <!-- 生成CSV按鈕 -->
-        <button id="generateCSV-btn" class="btn btn-success mt-4">請購單排單</button>
+            <!-- 生成CSV按鈕 -->
+            <button id="generateCSV-btn" class="btn btn-success mt-4">請購單排單</button>
+        </main>
     </div>
     <!-- Modal 結構: 彈窗預覽檔案 -->
     <div class="modal fade" id="filePreviewModal" tabindex="-1" aria-labelledby="filePreviewModalLabel" aria-hidden="true">
@@ -244,13 +249,18 @@
             }
 
             /**
-             * Fetch purchase request statements based on the provided filter criteria.
-             * @param {Object} param0 - The filter criteria.
-             * @param {string} param0.startDate - The start date for the filter.
-             * @param {string} param0.endDate - The end date for the filter.
-             * @param {string} param0.applierId - The ID of the applier.
-             * @param {Array|string} param0.stmtStatus - The status or statuses of the statements.
-             * @returns {Object} - An object containing the status, DataFrame, related file metadata, and download promises.
+             * Fetches purchase request statements based on the provided filter criteria.
+             *
+             * @param {Object} filter - The filter criteria.
+             * @param {string} filter.startDate - The start date for the filter.
+             * @param {string} filter.endDate - The end date for the filter.
+             * @param {string} filter.applierId - The ID of the applier.
+             * @param {Array|string} filter.stmtStatus - The status or statuses of the statements.
+             * @returns {Promise<Object>} - A promise that resolves to an object containing:
+             *                            - {string} status - The status of the fetch operation ('成功', '無資料', or '失敗').
+             *                            - {DataFrame} df - The DataFrame containing the filtered data.
+             *                            - {Object} attachmentsDict - A dictionary of attachments metadata keyed by statement ID.
+             *                            - {Array<Promise>} downloadPromises - An array of promises for downloading attachment files.
              */
             async function fetchPurchaseReqStmt({ startDate, endDate, applierId, stmtStatus } = {}) {
                 try {
@@ -268,8 +278,10 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        const filterResultDf = new dfd.DataFrame(data.queryResult).drop({ columns: ['附件檔案'], inplace: false });
+                        if (data.queryResult.length === 0) 
+                            return { 'status': '無資料', 'df': new dfd.DataFrame(), 'attachmentsDict': {}, 'downloadPromises': []};
 
+                        const filterResultDf = new dfd.DataFrame(data.queryResult).drop({ columns: ['附件檔案'], inplace: false });
                         const attachmentsDict = {};
                         const downloadPromises = data.queryResult.flatMap(record => {
                             const key = record["默認主鍵"];
@@ -279,10 +291,23 @@
 
                             if (fileMetas) {
                                 attachmentsDict[key] = fileMetas.map(fileMeta => {
+                                    const contentType = fileMeta['內容分類'];
+                                    const description = fileMeta['檔案說明'];
+                                    const extension = fileMeta['副檔名'];
+                                    const hash = fileMeta['哈希值'];
+                                    const attr = {
+                                        明細: key,
+                                        請購人: applierNo,
+                                        供應商: supplierName,
+                                        分類: contentType,
+                                        說明: description,
+                                        extension: extension,
+                                        hash: hash,
+                                    };
                                     const downloadPromise = fetchAttachment(fileMeta['默認主鍵']).then(file => {
                                         return {
                                             file: file,
-                                            filename: `明細編號[${key}]_請購人[${applierNo}]_供應商[${supplierName}]_內容[${fileMeta['內容分類']}].${fileMeta['副檔名']}`
+                                            attr: attr,
                                         };
                                     });
                                     return downloadPromise;
@@ -298,7 +323,7 @@
                     }
                 } catch (error) {
                     console.error('Error fetching records:', error);
-                    return { 'status': '失敗', 'df': null, 'attachmentsDict': null, 'downloadPromises': [] };
+                    return { 'status': '失敗', 'df': new dfd.DataFrame(), 'attachmentsDict': {}, 'downloadPromises': []};
                 }
             }
 
@@ -312,12 +337,12 @@
                 const startDate = document.getElementById('Input-startDate').value || '';
                 const endDate = document.getElementById('Input-endDate').value || '';
                 const Input_stmtStatus = document.getElementById('Input_stmtStatus').value || '';
-                const stmtStatus = Input_stmtStatus === '' ? ['等待集單', '退件'] : Input_stmtStatus;
+                const stmtStatus = Input_stmtStatus === '' ? ['正在集單', '退件等待處置'] : Input_stmtStatus;
                 const applierId = document.getElementById('Input_applier').value || '';
 
                 const fetchPurchaseReqStmtReturn = await fetchPurchaseReqStmt({ startDate, endDate, stmtStatus, applierId });
 
-                if (fetchPurchaseReqStmtReturn.status === '成功') {
+                if (fetchPurchaseReqStmtReturn.status === '成功' || fetchPurchaseReqStmtReturn.status === '無資料') {
                     reqStmtFilterResultDf = fetchPurchaseReqStmtReturn.df;
                     await renderRecords(fetchPurchaseReqStmtReturn.df);
                     attachmentsDict = fetchPurchaseReqStmtReturn.attachmentsDict; // Store the attachments dictionary
@@ -433,96 +458,178 @@
 
             async function generateCSV() {
                 try {
-                    const outputColNames_1 = [
-                        '料品代號',
-                        '請購數量',
-                        '需求日期',
-                        '建議廠商',
-                        '送貨地址碼',
-                        '備註',
-                    ];
-                    const outputColNames_2 = [
-                        '備註摘要',
-                        '備註說明',
-                    ];
-                    
+                    const outputColNames_1 = ['料品代號', '請購數量', '需求日期', '建議廠商', '送貨地址碼', '備註'];
+                    const outputColNames_2 = ['備註摘要', '備註說明'];
+                    const outputColNames_3 = ['明細ID', '供應商簡稱', '單價', '幣別'];
+
                     await Promise.all(downloadPromises);
 
-                    const groups = Array.from($('#records-container .group-container tbody')).map(function (tbody) {
-                        const rows = Array.from($(tbody).find('tr')).map(function (tr) {
-                            const stmtID = Number(tr.id.match(/\d+$/)[0]);
-                            let query = reqStmtFilterResultDf.loc({ rows: reqStmtFilterResultDf['默認主鍵'].eq(stmtID) });
-                            const stmt = query.shape[0] === 1 ? dfd.toJSON(query)[0] : null;
-                            query = dataFrame.suppliers.loc({ rows: dataFrame.suppliers['簡稱'].eq(stmt['供應商簡稱']) });
-                            const supplierNo = query.shape[0] === 1 ? query['供應商編號'].values[0] : null;
-                            query = dataFrame.minmaxOffice.loc({ rows: dataFrame.minmaxOffice['廠區名稱'].eq(stmt['收貨廠區']) });
-                            const OfficeNo = query.shape[0] === 1 ? query['地址碼'].values[0] : null;
-                            if (!stmt || !supplierNo || !OfficeNo) {
-                                throw new Error('Something wrong happened when querying result.');
-                            }
-
-                            return {
-                                '料品代號': stmt['物料代號'],
-                                '請購數量': stmt['需求數量'],
-                                '需求日期': stmt['需求到貨日期'],
-                                '建議廠商': supplierNo,
-                                '送貨地址碼': OfficeNo,
-                                '備註': stmt['備註'],
-                                '備註摘要': '',
-                                '備註說明': stmt['專案名稱'] ? '[' + stmt['專案名稱'] + ']': '' + stmt['用途說明'],
-                                '附件檔案': attachmentsDict[stmtID],
-                            };
-                        });
-
-                        return rows.length > 0 ? rows : null;
-                    }).filter(group => group !== null);
+                    const groups = extractGroupsFromContainer();
 
                     if (groups.length === 0) {
                         throw new Error('No groups to generate CSV.');
                     }
 
                     const zip = new JSZip();
-
-                    const folderPromises = groups.map(async (group, index) => {
-                        const folder = zip.folder('請購單-' + (index + 1));
-                        const csvContent_1 = '\uFEFF' + outputColNames_1.join(",") + "\n" + group.map(row => outputColNames_1.map(colName => `"${row[colName]}"`).join(",")).join("\n");
-                        const csvContent_2 = '\uFEFF' + outputColNames_2.join(",") + "\n" + group.map(row => outputColNames_2.map(colName => `"${row[colName]}"`).join(",")).join("\n");
-                        folder.file('table_1.csv', csvContent_1);
-                        folder.file('table_2.csv', csvContent_2);
-
-                        const attachmentPromises = group.flatMap(row => {
-                            const attachments = row['附件檔案'];
-                            if (attachments) {
-                                return attachments.map(async attachmentPromise => {
-                                    const { file, filename } = await attachmentPromise;
-                                    console.log(`Adding file to zip: ${filename}, size: ${file.size}`);
-                                    folder.file(filename, file);
-                                });
-                            }
-                            return [];
-                        });
-
-                        await Promise.all(attachmentPromises);
-                    });
-
-                    await Promise.all(folderPromises);
-
+                    await generateZipFolders(zip, groups, outputColNames_1, outputColNames_2, outputColNames_3);
                     
                     zip.generateAsync({ type: 'blob' })
-                        .then(function (content) {
-                            saveAs(content, '請購單-匯出日=' + new Date().toISOString().split('T')[0] + '.zip');
-                        })
-                        .catch((error) => {
-                            console.error('Error generating ZIP file:', error);
-                        });
-                }
-                catch (error) {
+                        .then(content => saveAs(content, '請購單-匯出日=' + new Date().toISOString().split('T')[0] + '.zip'))
+                        .catch(error => console.error('Error generating ZIP file:', error));
+
+                } catch (error) {
                     console.error(error);
                     alert(error);
-                    return
+                    return;
                 }
             }
 
+            function extractGroupsFromContainer() {
+                return Array.from($('#records-container .group-container tbody')).map(tbody => {
+                    let index = 1;
+                    const rows = Array.from($(tbody).find('tr')).map(tr => extractRowData(tr, index++));
+                    return rows.length > 0 ? rows : null;
+                }).filter(group => group !== null);
+            }
+
+            function extractRowData(tr, index) {
+                const stmtID = Number(tr.id.match(/\d+$/)[0]);
+                let query = reqStmtFilterResultDf.loc({ rows: reqStmtFilterResultDf['默認主鍵'].eq(stmtID) });
+                const stmt = query.shape[0] === 1 ? dfd.toJSON(query)[0] : null;
+                query = dataFrame.suppliers.loc({ rows: dataFrame.suppliers['簡稱'].eq(stmt['供應商簡稱']) });
+                const supplierNo = query.shape[0] === 1 ? query['供應商編號'].values[0] : null;
+                query = dataFrame.minmaxOffice.loc({ rows: dataFrame.minmaxOffice['廠區名稱'].eq(stmt['收貨廠區']) });
+                const OfficeNo = query.shape[0] === 1 ? query['地址碼'].values[0] : null;
+                if (!stmt || !supplierNo || !OfficeNo) {
+                    throw new Error('Something wrong happened when querying result.');
+                }
+
+                return {
+                    '明細ID': stmtID,
+                    '供應商簡稱': stmt['供應商簡稱'],
+                    '單價': stmt['單價'],
+                    '幣別': stmt['幣別'],
+                    '料品代號': stmt['物料代號'],
+                    '請購數量': stmt['需求數量'],
+                    '需求日期': stmt['需求到貨日期'],
+                    '建議廠商': supplierNo,
+                    '送貨地址碼': OfficeNo,
+                    '備註': stmt['備註'],
+                    '備註摘要': '',
+                    '備註說明': stmt['專案名稱'] ? `${index}. [${stmt['專案名稱']}]${stmt['用途說明']}` : stmt['用途說明'] ? `${index}. ${stmt['用途說明']}` : '',
+                    '附件檔案': attachmentsDict[stmtID],
+                };
+            }
+
+            async function generateZipFolders(zip, groups, outputColNames_1, outputColNames_2, outputColNames_3) {
+                const folderPromises = groups.map(async (group, index) => {
+                    const folder = zip.folder('請購單-' + (index + 1));
+                    let csvRowData_1 = [];
+                    let csvRowData_2 = [];
+                    let csvRowData_3 = [];
+                    group.forEach(row => {
+                        csvRowData_1.push(outputColNames_1.map(colName => `"${row[colName]}"`).join(","));
+                        csvRowData_2.push(outputColNames_2.map(colName => `"${row[colName]}"`).join(","));
+                        row['料品代號'] === 'FREIGHT' && csvRowData_3.push(outputColNames_3.map(colName => `"${row[colName]}"`).join(","));
+                    });
+                    if (csvRowData_1.length !== 0) {
+                        const csvContent = '\uFEFF' + outputColNames_1.join(",") + "\n" + csvRowData_1.join("\n");
+                        folder.file('[表單]請購主表單.csv', csvContent);
+                    }
+                    if (csvRowData_2.length !== 0) {
+                        const csvContent = '\uFEFF' + outputColNames_2.join(",") + "\n" + csvRowData_2.join("\n");
+                        folder.file('[表單]備註說明副表單.csv', csvContent);
+                    }
+                    if (csvRowData_3.length !== 0) {
+                        const csvContent = '\uFEFF' + outputColNames_3.join(",") + "\n" + csvRowData_3.join("\n");
+                        folder.file('[補充]運費單價.csv', csvContent);
+                    }
+                    await processAttachments(folder, group);
+                });
+                await Promise.all(folderPromises);
+            }
+
+            async function processAttachments(folder, group) {
+                const attachmentPool = {};
+                const attachmentPromises = group.flatMap(row => {
+                    const attachments = row['附件檔案'];
+                    if (attachments) {
+                        return attachments.map(async attachmentPromise => {
+                            const { file, attr } = await attachmentPromise;
+                            if (!attachmentPool[attr['hash']]) {
+                                attachmentPool[attr['hash']] = {
+                                    file: file,
+                                    extension: attr['extension'],
+                                    明細: new Set().add(attr['明細']),
+                                    請購人: new Set().add(attr['請購人']),
+                                    供應商: new Set().add(attr['供應商']),
+                                    分類: new Set().add(attr['分類']),
+                                    說明: new Set().add(attr['說明']),
+                                };
+                            } else {
+                                attachmentPool[attr['hash']]['明細'].add(attr['明細']);
+                                attachmentPool[attr['hash']]['請購人'].add(attr['請購人']);
+                                attachmentPool[attr['hash']]['供應商'].add(attr['供應商']);
+                                attachmentPool[attr['hash']]['分類'].add(attr['分類']);
+                                attachmentPool[attr['hash']]['說明'].add(attr['說明']);
+                            }
+                        });
+                    }
+                    return [];
+                });
+                await Promise.all(attachmentPromises);
+                for (let attachment of Object.values(attachmentPool)) {
+                    const attr = [];
+                    const stmt_id_str = formatNumberRanges(Array.from(attachment['明細']));
+                    attr.push(`明細[${stmt_id_str}]`);
+                    attr.push(`請購人[${Array.from(attachment['請購人']).join(',')}]`);
+                    attr.push(`供應商[${Array.from(attachment['供應商']).join(',')}]`);
+                    attr.push(`分類[${Array.from(attachment['分類']).join(',')}]`);
+                    attr.push(`說明[${Array.from(attachment['說明']).join(',')}]`);
+                    const filename = `${attr.join('_')}.${attachment['extension']}`;
+                    const file = attachment['file'];
+                    folder.file(filename, file);
+                }
+            }
+
+            function formatNumberRanges(attachmentIds) {
+                // 將 Set 轉換為排序過的列表
+                let sortedList = Array.from(attachmentIds).map(Number).sort((a, b) => a - b);
+
+                // 初始化變數
+                let ranges = [];
+                let currentRange = [];
+
+                // 遍歷排序過的列表來檢查連續的數字
+                for (let number of sortedList) {
+                    if (currentRange.length === 0) {
+                        currentRange.push(number);
+                    } else if (number === currentRange[currentRange.length - 1] + 1) {
+                        currentRange.push(number);
+                    } else {
+                        if (currentRange.length > 1) {
+                            ranges.push(`${currentRange[0]}~${currentRange[currentRange.length - 1]}`);
+                        } else {
+                            ranges.push(`${currentRange[0]}`);
+                        }
+                        currentRange = [number];
+                    }
+                }
+
+                // 處理最後一個範圍
+                if (currentRange.length > 0) {
+                    if (currentRange.length > 1) {
+                        ranges.push(`${currentRange[0]}~${currentRange[currentRange.length - 1]}`);
+                    } else {
+                        ranges.push(`${currentRange[0]}`);
+                    }
+                }
+
+                // 組裝最終的字串
+                let resultString = `${ranges.join(',')}`;
+                return resultString;
+            }
+            
             // 為指定的 <select> OR <datalist> 設置選項，首先清除所有現有選項，然後添加一個預設選項和選項清單
             function setupSelectOptions(selector, list, hasEmptyOption = false) {
                 // 清除 selector 中的所有子節點
@@ -541,6 +648,18 @@
 
                 // 將文檔片段中的所有選項一次性添加到 selector 中
                 selector.appendChild(fragment);
+            }
+
+            // 針對d-flex物件的顯示/隱藏設定
+            function setDFlexElmVisibility(dflexElement, isVisible) {
+                if (isVisible) {
+                    dflexElement.classList.add('d-flex');
+                    dflexElement.classList.remove('d-none');
+                }
+                else {
+                    dflexElement.classList.add('d-none');
+                    dflexElement.classList.remove('d-flex');
+                }
             }
 
             function previewFile(file) {
@@ -572,12 +691,14 @@
 
             }
 
+            window.addEventListener('load', () => setDFlexElmVisibility(document.getElementById('search-btn'), true), false);
+
             function startUp() {
                 Promise.all(resourceName_get.map(fetchResource)).then(() => {
                     setupSelectOptions(document.getElementById('employee_datalist'), dataFrame.employees['工號簡碼'].values); //申請人
                 })
                     .catch(error => console.error('Error during startup:', error));
-                
+
                 document.getElementById('search-btn').addEventListener('click', search, false);
                 document.getElementById('addGroup-btn').addEventListener('click', addGroup, false);
                 document.getElementById('generateCSV-btn').addEventListener('click', generateCSV, false);

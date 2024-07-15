@@ -1,148 +1,77 @@
 import io
 import os
-import sys
 import pytz
-import time
-import ctypes
-import pyodbc
-import ntplib
-import platform
-import traceback
-import xlwings as xw
 import pythoncom
-import pandas as pd
 import comtypes.client
-from PIL import ImageGrab, Image
 from pathlib import Path
-from ctypes import wintypes
 from werkzeug.datastructures import FileStorage
-from typing import List, Dict, Any, Tuple, Literal, Optional, Callable
-from datetime import datetime
-from sqlalchemy.engine import Engine, URL
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session
-from decimal import Decimal, ROUND_HALF_UP, ROUND_DOWN
+from typing import Optional
+from sqlalchemy.engine import URL
 
 class utils:
     @classmethod
     def make_postgresql_DBURL(cls, user: str, password: str, host: str, port: str, database_name: str) -> str:
-        """ 建立資料庫連接字串 """
+        """
+        建立 PostgreSQL 資料庫連接字串
+
+        :param user: 資料庫用戶名
+        :param password: 資料庫密碼
+        :param host: 資料庫主機地址
+        :param port: 資料庫端口
+        :param database_name: 資料庫名稱
+        :return: 資料庫連接字串
+        """
         db_url = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
         return db_url
     
     @classmethod
     def make_access_DBURL(cls, access_db_path) -> str:
-        """ 建立資料庫連接字串 """
+        """
+        建立 Microsoft Access 資料庫連接字串
+
+        :param access_db_path: Access 資料庫文件路徑
+        :return: 資料庫連接 URL 物件
+        """
         # Name of Driver from Step 1
         connection_str = r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
         connection_str += f'DBQ={access_db_path};'
 
         # Create Connection
         connection_url = URL.create("access+pyodbc", query={"odbc_connect": connection_str})
-        # engine = create_engine(connection_url)
         return connection_url
     
     @classmethod
     def make_sqlite_DBURL(cls, access_db_path) -> str:
-        """ 建立資料庫連接字串 """
+        """
+        建立 SQLite 資料庫連接字串
+
+        :param access_db_path: SQLite 資料庫文件路徑
+        :return: 資料庫連接字串
+        """
         db_url = f"sqlite:///{access_db_path}"
         return db_url
     
     @classmethod
     def get_tz(cls):
-        """回傳時區物件"""
+        """
+        獲取設定的時區，如果環境變數 TIMEZONE 未設置，則預設為 'Asia/Taipei'
+
+        :return: 時區物件
+        """
         return pytz.timezone(os.getenv('TIMEZONE') or 'Asia/Taipei')
-    
-    @classmethod
-    def resize_image(cls, image, max_width):
-        """
-        Resizes the image to the target width while maintaining aspect ratio.
-        """
-        width_percent = max_width / float(image.size[0])
-        height = int((float(image.size[1]) * float(width_percent)))
-        return image.resize((max_width, height), Image.LANCZOS)
-
-    @classmethod
-    def excel_to_images(cls, excel_file: FileStorage, extension: str) -> Optional[io.BytesIO]:
-        """
-        Converts the first sheet of an Excel file to an image and returns it as a BytesIO object.
-        
-        Parameters:
-        - excel_file: The uploaded Excel file.
-        - extension: The file extension of the uploaded Excel file.
-        
-        Returns:
-        - A BytesIO object containing the image, or None if the conversion fails.
-        """
-        temp_excel_path = f"temp_excel.{extension}"
-        
-        try:
-            # Save the uploaded file to a temporary path
-            excel_file.save(temp_excel_path)
-            
-            # Initialize COM for Excel automation
-            pythoncom.CoInitialize()
-            app = xw.App(visible=False, add_book=False)
-            workbook = app.books.open(temp_excel_path)
-            sheet = workbook.sheets[0]  # Use only the first sheet
-            
-            # Export the used range as an image
-            used_range = sheet.used_range
-            used_range.api.CopyPicture(Format=2)  # xlBitmap format
-            
-            # Create a temporary workbook to paste the picture
-            temp_workbook = app.books.add()
-            temp_sheet = temp_workbook.sheets[0]
-            temp_sheet.api.Paste()
-            
-            # Save the picture as an image
-            temp_sheet.pictures[0].api.Copy()
-            img = ImageGrab.grabclipboard()
-            if img is None:
-                raise ValueError("Failed to retrieve the image from the clipboard")
-            
-            # Adjust image size
-            img = cls.resize_image(img, 1075)
-            
-            # Convert image to RGB if necessary
-            # if img.mode == 'RGBA':
-            #     img = img.convert('RGB')
-
-            # Save the image to a BytesIO object
-            img_buffer = io.BytesIO()
-            img.save(img_buffer, format='PNG')
-            # img.save(img_buffer, format='JPEG', quality=85)  # Change quality as needed
-            img_buffer.seek(0)
-            
-            # Clean up
-            temp_workbook.close()
-            workbook.close()
-            app.quit()
-            pythoncom.CoUninitialize()
-            os.remove(temp_excel_path)
-            
-            return img_buffer
-        
-        except Exception as e:
-            print(f"Error: {e}")
-            traceback.print_exc()
-            
-            # Clean up in case of an error
-            if 'temp_workbook' in locals():
-                temp_workbook.close()
-            if 'workbook' in locals():
-                workbook.close()
-            if 'app' in locals():
-                app.quit()
-            pythoncom.CoUninitialize()
-            if os.path.exists(temp_excel_path):
-                os.remove(temp_excel_path)
-            
-            return None
         
     @classmethod
     def office_doc_to_pdf(cls, doc_path: str | Path | None = None, doc_stream: FileStorage | io.BytesIO | None = None, extension: str | None = None) -> Optional[io.BytesIO]:
-        
+        """
+        將 Office 文件轉換為 PDF 文件
+
+        :param doc_path: 文件路徑 (可選)
+        :param doc_stream: 文件流 (可選)
+        :param extension: 文件副檔名 (當 doc_stream 提供時需要)
+        :return: 轉換後的 PDF 文件流 (BytesIO)
+        """
+
+         # 支援的文件格式及對應的應用程式
         convert_core_APPs = {
             '.doc'  : 'Word',
             '.docx' : 'Word',

@@ -2,6 +2,7 @@ import os
 import uuid
 import traceback
 import mimetypes
+from pathlib import Path
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, send_file
 from sqlalchemy import and_, or_
@@ -434,6 +435,12 @@ def get_purchaseRequestStmt_resource():
         # 將結果轉換為字典
         records_list = [record.to_dict() for record in stmt_records]
 
+        if not records_list:
+            return jsonify({
+                'message': 'No records found',
+                'queryResult': records_list,
+            }), 200
+
         return jsonify({
             'message': 'success',
             'queryResult': records_list,
@@ -452,7 +459,7 @@ def post_purchaseRequestStmt_resource():
 
         if new_purchaseReqStmt.物料代號 == 'FREIGHT':
             if 供應商.query.filter_by(簡稱=new_purchaseReqStmt.供應商簡稱).scalar():
-                new_purchaseReqStmt.狀態 = '等待集單'
+                new_purchaseReqStmt.狀態 = '正在集單'
                 if not new_purchaseReqStmt.幣別 or not new_purchaseReqStmt.單價:
                     raise ValueError('Currency data and unit price data are required when purchase request is freight.')
                 new_purchaseReqStmt.單位 = 'PCE'
@@ -475,7 +482,7 @@ def post_purchaseRequestStmt_resource():
             if material.狀態 == '等待核准':
                 new_purchaseReqStmt.狀態 = '等待物料更新'
             elif material.狀態 == '正常使用':
-                new_purchaseReqStmt.狀態 = '等待集單'
+                new_purchaseReqStmt.狀態 = '正在集單'
             elif material.狀態 == '報價單過期':
                 '''等待添加處理邏輯'''
         else:  
@@ -551,8 +558,23 @@ def bind_file_purchaseRequestStmt():
     file_record = 檔案.query.filter_by(默認主鍵=file_pk).scalar()
 
     if stmt_record and file_record:
-        stmt_record.附件檔案.append(file_record)
         try:
+            if file_record.快取:
+                file_record.快取 = False
+                files_storage_folder = Path(os.getenv('FILES_STORAGE_FOLDER'))
+                old_full_file_path = files_storage_folder / file_record.檔案路徑
+                if old_full_file_path.exists():
+                    new_relative_file_path = Path(file_record.內容分類) / f'{file_record.默認主鍵}.{file_record.副檔名}'
+                    new_full_file_path = files_storage_folder / new_relative_file_path
+                    new_full_file_path.parent.mkdir(parents=True, exist_ok=True)
+                    old_full_file_path.rename(new_full_file_path)
+                    file_record.檔案路徑 = str(new_relative_file_path)
+                    file_record.update()
+                else:
+                    file_record.delete()
+                    raise FileNotFoundError('This file was removed improperly. To maintain system stability, this data row will be deleted.')
+                
+            stmt_record.附件檔案.append(file_record)
             stmt_record.update()
             return jsonify({
                 'message': 'Successfully bound file to purchase request statement.',

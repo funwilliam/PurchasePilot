@@ -56,19 +56,17 @@
         <header class="m-2"></header>
         <main class="px-1 pt-1 pb-4 bg-white rounded-top-3 shadow">
             <div class="d-flex justify-content-between">
-                <button type="button" class="btn p-0" style="width: 50px; height: 50px;">
+                <button type="button" class="btn p-0" style="width: 50px; height: 50px;" onclick="window.location.href='/';" aria-label="Return to homepage">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
                         class="w-50 h-50 bi bi-reply-fill text-secondary" viewBox="0 0 16 16" style="opacity: .45;">
-                        <path
-                            d="M5.921 11.9 1.353 8.62a.72.72 0 0 1 0-1.238L5.921 4.1A.716.716 0 0 1 7 4.719V6c1.5 0 6 0 7 8-2.5-4.5-7-4-7-4v1.281c0 .56-.606.898-1.079.62z" />
+                        <path d="M5.921 11.9 1.353 8.62a.72.72 0 0 1 0-1.238L5.921 4.1A.716.716 0 0 1 7 4.719V6c1.5 0 6 0 7 8-2.5-4.5-7-4-7-4v1.281c0 .56-.606.898-1.079.62z" />
                     </svg>
                 </button>
             </div>
             <form id="material-form" autocomplete="off">
                 <fieldset class="mx-5 my-2">
                     <div class="text-center mb-4">
-                        <img src="{{ url_for('static', filename='images/banner.png') }}" alt="Banner"
-                            class="img-fluid rounded">
+                        <img src="{{ url_for('static', filename='images/banner.png') }}" alt="Banner" class="img-fluid rounded">
                     </div>
                     <h3 class="p-2 text-start fw-bolder rounded-2" style="letter-spacing: 0.4rem;">
                         工程部物料創建&資訊更新表單 (內部)
@@ -157,12 +155,9 @@
                     <div class="m-2 p-1">
                         <div class="d-flex align-items-center">
                             <label for="Input_partName" class="form-label">品名</label>
-                            <button type="button"
-                                class="btn form-label p-0 ms-2 border-0 text-danger clr-input-btn d-none align-items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                    class="bi bi-eraser-fill m-0 p-0 pe-none" viewBox="0 0 16 16">
-                                    <path class="pe-none"
-                                        d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828zm.66 11.34L3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293z" />
+                            <button type="button" class="btn form-label p-0 ms-2 border-0 text-danger clr-input-btn d-none align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eraser-fill m-0 p-0 pe-none" viewBox="0 0 16 16">
+                                    <path class="pe-none" d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828zm.66 11.34L3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293z" />
                                 </svg>
                             </button>
                         </div>
@@ -179,7 +174,7 @@
                             <div class="m-1 p-2">
                                 <label for="Input_currency" class="form-label">幣別</label>
                                 <select id="Input_currency" class="form-select" aria-label="Default select example">
-                                    <option selected>Open this select menu</option>
+                                    <option selected>選項載入中...</option>
                                 </select>
                             </div>
                         </div>
@@ -187,7 +182,7 @@
                             <div class="m-1 p-2">
                                 <label for="Input_unit" class="form-label">單位</label>
                                 <select id="Input_unit" class="form-select" aria-label="Default select example">
-                                    <option selected>Open this select menu</option>
+                                    <option selected>選項載入中...</option>
                                 </select>
                             </div>
                         </div>
@@ -195,13 +190,13 @@
                     <div class="m-2 p-1">
                         <label for="Input_materialType" class="form-label">預設物料類別</label>
                         <select id="Input_materialType" class="form-select" aria-label="Default select example">
-                            <option selected>Open this select menu</option>
+                            <option selected>選項載入中...</option>
                         </select>
                     </div>
                     <div class="m-2 p-1">
                         <label for="Input_delieveryOffice" class="form-label">預設收貨廠區</label>
                         <select id="Input_delieveryOffice" class="form-select" aria-label="Default select example">
-                            <option selected>Open this select menu</option>
+                            <option selected>選項載入中...</option>
                         </select>
                     </div>
                     <div class="m-2 p-1">

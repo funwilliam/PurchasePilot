@@ -22,4 +22,5 @@ class 檔案(db.Model):
     物料 = relationship('物料', back_populates='報價單', passive_deletes=True)
 
     # 多對多關係
-    請購明細 = relationship("請購明細", secondary='Mapping_請購明細_檔案', back_populates='附件檔案')
+    請購明細 = relationship("請購明細", secondary='請購明細附件檔案關聯表', back_populates='附件檔案')
+    

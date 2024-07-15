@@ -111,7 +111,7 @@
         <header class="m-2"></header>
         <main class="px-1 pt-1 pb-4 bg-white rounded-top-3 shadow">
             <div class="d-flex justify-content-between">
-                <button type="button" class="btn p-0" style="width: 50px; height: 50px;">
+                <button type="button" class="btn p-0" style="width: 50px; height: 50px;" onclick="window.location.href='/';" aria-label="Return to homepage">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-50 h-50 bi bi-reply-fill text-secondary" viewBox="0 0 16 16" style="opacity: .45;">
                         <path d="M5.921 11.9 1.353 8.62a.72.72 0 0 1 0-1.238L5.921 4.1A.716.716 0 0 1 7 4.719V6c1.5 0 6 0 7 8-2.5-4.5-7-4-7-4v1.281c0 .56-.606.898-1.079.62z" />
                     </svg>
@@ -155,7 +155,7 @@
                             <div class="m-2 p-1">
                                 <label for="Input_materialType" class="form-label">物料類別</label>
                                 <select id="Input_materialType" class="form-select" aria-label="Default select example" disabled>
-                                    <option selected>Open this select menu</option>
+                                    <option selected>選項載入中...</option>
                                 </select>
                             </div>
                         </div>
@@ -265,19 +265,19 @@
                     <div class="m-2 p-1">
                         <label for="Input_delieveryOffice" class="form-label">收貨廠區</label>
                         <select id="Input_delieveryOffice" class="form-select" aria-label="Default select example">
-                            <option selected>Open this select menu</option>
+                            <option selected>選項載入中...</option>
                         </select>
                     </div>
                     <div class="m-2 p-1">
                         <label for="Input_purchaseReason" class="form-label">請購原因</label>
                         <select id="Input_purchaseReason" class="form-select" aria-label="Default select example">
-                            <option selected>Open this select menu</option>
+                            <option selected>選項載入中...</option>
                         </select>
                     </div>
                     <div class="m-2 p-1">
                         <label for="Input_projectName" class="form-label">隸屬於專案</label>
                         <select id="Input_projectName" class="form-select" aria-label="Default select example">
-                            <option selected>Open this select menu</option>
+                            <option selected>選項載入中...</option>
                         </select>
                     </div>
                     <div class="row">
@@ -660,10 +660,6 @@
             }
 
             async function bindStmtWithAttachment({purchaseRequestStmtPrimeKey, filePrimeKey}={}) {
-                console.log({
-                    purchaseRequestStmtPrimeKey: purchaseRequestStmtPrimeKey,
-                    filePrimeKey: filePrimeKey,
-                });
                 try {
                     const url = new URL('/api/bind/purchaseRequestStmt-attachment', window.location.origin);
                     const response = await fetch(url, {
