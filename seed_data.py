@@ -12,6 +12,7 @@ a = data_set['供應商']
 
 # 取得供應商CSV檔資料
 df = pd.read_csv('data\供應商.csv', encoding='utf-8')
+df = df.where(pd.notnull(df), None)
 for index, row in df.iterrows():
     data_set['供應商'].append(
         供應商(
@@ -25,6 +26,7 @@ for index, row in df.iterrows():
 
 # 取得單位CSV檔資料
 df = pd.read_csv('data\單位.csv', encoding='utf-8')
+df = df.where(pd.notnull(df), None)
 for index, row in df.iterrows():
     data_set['單位'].append(
         單位(
@@ -37,6 +39,7 @@ for index, row in df.iterrows():
 
 # 取得幣別CSV檔資料
 df = pd.read_csv('data\幣別.csv', encoding='utf-8')
+df = df.where(pd.notnull(df), None)
 for index, row in df.iterrows():
     data_set['幣別'].append(
         幣別(
@@ -49,6 +52,7 @@ for index, row in df.iterrows():
 
 # 取得員工CSV檔資料
 df = pd.read_csv('data\員工.csv', encoding='utf-8')
+df = df.where(pd.notnull(df), None)
 for index, row in df.iterrows():
     data_set['員工'].append(
         員工(
@@ -63,6 +67,7 @@ for index, row in df.iterrows():
 
 # 取得專案CSV檔資料
 df = pd.read_csv('data\專案.csv', encoding='utf-8')
+df = df.where(pd.notnull(df), None)
 for index, row in df.iterrows():
     data_set['專案'].append(
         專案(
@@ -76,6 +81,7 @@ for index, row in df.iterrows():
 
 # 取得捷拓廠區CSV檔資料
 df = pd.read_csv('data\捷拓廠區.csv', encoding='utf-8')
+df = df.where(pd.notnull(df), None)
 for index, row in df.iterrows():
     data_set['捷拓廠區'].append(
         捷拓廠區(
@@ -88,6 +94,7 @@ for index, row in df.iterrows():
 
 # 取得請購類型CSV檔資料
 df = pd.read_csv('data\請購類型.csv', encoding='utf-8')
+df = df.where(pd.notnull(df), None)
 for index, row in df.iterrows():
     data_set['請購類型'].append(
         請購類型(
@@ -98,6 +105,7 @@ for index, row in df.iterrows():
 
 # 取得物料類別CSV檔資料
 df = pd.read_csv('data\物料類別.csv', encoding='utf-8')
+df = df.where(pd.notnull(df), None)
 for index, row in df.iterrows():
     data_set['物料類別'].append(
         物料類別(
@@ -108,6 +116,7 @@ for index, row in df.iterrows():
 
 # 取得物料CSV檔資料
 df = pd.read_csv('data\物料.csv', encoding='utf-8')
+df = df.where(pd.notnull(df), None)
 for index, row in df.iterrows():
     data_set['物料'].append(
         物料(

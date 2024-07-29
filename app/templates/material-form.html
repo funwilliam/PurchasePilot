@@ -173,7 +173,7 @@
                         <div class="col-4">
                             <div class="m-1 p-2">
                                 <label for="Input_currency" class="form-label">幣別</label>
-                                <select id="Input_currency" class="form-select" aria-label="Default select example">
+                                <select id="Input_currency" class="form-select" aria-label="幣別選單">
                                     <option selected>選項載入中...</option>
                                 </select>
                             </div>
@@ -181,7 +181,7 @@
                         <div class="col-4">
                             <div class="m-1 p-2">
                                 <label for="Input_unit" class="form-label">單位</label>
-                                <select id="Input_unit" class="form-select" aria-label="Default select example">
+                                <select id="Input_unit" class="form-select" aria-label="單位選單">
                                     <option selected>選項載入中...</option>
                                 </select>
                             </div>
@@ -189,13 +189,13 @@
                     </div>
                     <div class="m-2 p-1">
                         <label for="Input_materialType" class="form-label">預設物料類別</label>
-                        <select id="Input_materialType" class="form-select" aria-label="Default select example">
+                        <select id="Input_materialType" class="form-select" aria-label="物料類別選單">
                             <option selected>選項載入中...</option>
                         </select>
                     </div>
                     <div class="m-2 p-1">
                         <label for="Input_delieveryOffice" class="form-label">預設收貨廠區</label>
-                        <select id="Input_delieveryOffice" class="form-select" aria-label="Default select example">
+                        <select id="Input_delieveryOffice" class="form-select" aria-label="收貨廠區選單">
                             <option selected>選項載入中...</option>
                         </select>
                     </div>
@@ -244,7 +244,7 @@
             </div>
         </div>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.js" integrity="sha256-7gIlf/uvCptIHHA5sPO7IMNgyWdP5L6LOK5wmy6lm74=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/danfojs@1.1.2/lib/bundle.js" integrity="sha256-b4/iTif0LxfGrbF3LLsHwg852tbYcHbLpHMJnY3PsTo=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha256-CDOy6cOibCWEdsRiZuaHf8dSGGJRYuBGC+mjoJimHGw=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" integrity="sha256-uOhwxdKyl3LxDJ+pppPIuJaqyFQO1nAePMYwTGg/69s=" crossorigin="anonymous"></script>
@@ -985,11 +985,14 @@
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = () => {
-                        crypto.subtle.digest('SHA-256', reader.result).then(hashBuffer => {
-                            const hashArray = Array.from(new Uint8Array(hashBuffer));
-                            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                        try {
+                            const wordArray = CryptoJS.lib.WordArray.create(reader.result);
+                            const hash = CryptoJS.SHA256(wordArray);
+                            const hashHex = hash.toString(CryptoJS.enc.Hex);
                             resolve(hashHex);
-                        }).catch(reject);
+                        } catch (error) {
+                            reject(error);
+                        }
                     };
                     reader.onerror = () => reject(reader.error);
                     reader.readAsArrayBuffer(file);

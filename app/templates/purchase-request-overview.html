@@ -6,6 +6,7 @@
     <title>Purchase Requisition Overview</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-PI8n5gCcz9cQqQXm3PEtDuPG8qx9oFsFctPg0S5zb8g=" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha256-9kPW/n5nn53j4WMRYAxe9c1rCY96Oogo/MKSVdKzPmI=" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-daterangepicker@3.1.0/daterangepicker.css" rel="stylesheet" integrity="sha256-lP22bsj+dImBpPIJD99KKgo9vlrOLmXEzkbpXWkr2sc=" crossorigin="anonymous">
     <style>
         .table-responsive {
             overflow-x: auto;
@@ -16,9 +17,6 @@
         .sortable-ghost {
             opacity: 0.8;
         }
-        /* .sortable-ghost td {
-            visibility: hidden;
-        } */
     </style>
 </head>
 <body>
@@ -31,31 +29,48 @@
                     </svg>
                 </button>
             </div>
-            <h1 class="my-2 fw-bold">請購明細彙整</h1>
+            <h1 class="my-2 fw-bold">請購明細查詢</h1>
             <h4 class="my-1" style="opacity: .9;">匯出ERP請購系統csv格式</h4>
         </header>
         <main>
             <!-- 搜索條件 -->
             <form id="filter-form" class="my-4" autocomplete="off">
                 <div class="row">
-                    <div class="col-md-2 pe-4">
-                        <label for="Input-startDate" class="form-label fw-bold m-1">起始日</label>
-                        <input type="date" id="Input-startDate" name="start_date" class="form-control">
+                    <div class="col-md-1 px-3">
+                        <label for="Input_supplier" class="form-label ms-1 fw-bold">供應商</label>
+                        <input type="text" class="form-control" id="Input_supplier" list="supplier_datalist">
+                        <datalist id="supplier_datalist"></datalist>
+                    </div>
+                    <div class="col-md-2 px-3">
+                        <label for="Input_materialId" class="form-label ms-1 fw-bold">料號</label>
+                        <input type="text" class="form-control" id="Input_materialId" maxlength="38" list="material_datalist">
+                        <datalist id="material_datalist"></datalist>
+                    </div>
+                    <div class="col-md-3 px-4">
+                        <label for="Input-dateRange" class="form-label ms-1 fw-bold">日期區間</label>
+                        <input type="text" id="Input-dateRange" name="daterange" class="form-control" placeholder="年/月/日 - 年/月/日">
                     </div>
                     <div class="col-md-2 px-4">
-                        <label for="Input-endDate" class="form-label fw-bold m-1">結束日</label>
-                        <input type="date" id="Input-endDate" name="end_date" class="form-control">
-                    </div>
-                    <div class="col-md-2 px-4">
-                        <label for="Input_stmtStatus" class="form-label fw-bold">狀態</label>
+                        <label for="Input_stmtStatus" class="form-label ms-1 fw-bold">狀態</label>
                         <select id="Input_stmtStatus" class="form-select" value="" aria-label="請購狀態選單">
-                            <option value="">[待處理]</option>
+                            <option value="">[所有狀態]</option>
+                            <option value="等待物料更新">等待物料更新</option>
                             <option value="正在集單">正在集單</option>
+                            <option value="請購簽核進行中">請購簽核進行中</option>
                             <option value="退件等待處置">退件等待處置</option>
+                            <option value="採購中等待收貨">採購中等待收貨</option>
+                            <option value="等待驗收">等待驗收</option>
+                            <option value="已結案">已結案</option>
                         </select>
                     </div>
-                    <div class="col-md-2 px-4">
-                        <label for="Input_applier" class="form-label fw-bold">申請人工號</label>
+                    <div class="col-md-2 px-3">
+                        <label for="Input_delieveryOffice" class="form-label ms-1 fw-bold">收貨廠區</label>
+                        <select id="Input_delieveryOffice" class="form-select" aria-label="收貨廠區選單">
+                            <option selected>選項載入中...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1 px-3">
+                        <label for="Input_applier" class="form-label ms-1 fw-bold">員工號</label>
                         <input type="text" class="form-control" id="Input_applier" placeholder="Ex. 001" list="employee_datalist">
                         <datalist id="employee_datalist"></datalist>
                     </div>
@@ -66,16 +81,10 @@
                 </div>
             </form>
 
-            <!-- 增加分組按鈕 -->
-            <button id="addGroup-btn" class="btn btn-primary mt-3">新增群組</button>
-
             <!-- 資料清單 -->
             <div id="records-container" class="mt-4">
                 <!-- 清單將動態填充 -->
             </div>
-
-            <!-- 生成CSV按鈕 -->
-            <button id="generateCSV-btn" class="btn btn-success mt-4">請購單排單</button>
         </main>
     </div>
     <!-- Modal 結構: 彈窗預覽檔案 -->
@@ -101,21 +110,245 @@
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.7.1/dist/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/danfojs@1.1.2/lib/bundle.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Modal 結構: 彈窗展示明細 -->
+    <div class="modal fade" id="stmtDetailsModal" tabindex="-1" aria-labelledby="stmtDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="stmtDetailsModalLabel">請購明細-所有資訊</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="container">
+                        <div class="row border-bottom mb-3 pb-2">
+                            <h5 class="text-primary">編號</h5>
+                            <div class="col-6">
+                                <p>
+                                    <strong>明細編號:</strong>
+                                    <span id="displayStmt-stmtId"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>正式請購單號:</strong>
+                                    <span id="displayStmt-OfficialReqFormId"></span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row border-bottom mb-3 pb-2">
+                            <h5 class="text-primary">供應商</h5>
+                            <div class="col-6">
+                                <p>
+                                    <strong>編號:</strong>
+                                    <span id="displayStmt-supplierId"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>簡稱:</strong>
+                                    <span id="displayStmt-supplierName"></span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row border-bottom mb-3 pb-2">
+                            <h5 class="text-primary">物料</h5>
+                            <div class="col-6">
+                                <p>
+                                    <strong>料號:</strong>
+                                    <span id="displayStmt-materialId"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>品名規格:</strong>
+                                    <span id="displayStmt-partName"></span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row border-bottom mb-3 pb-2">
+                            <h5 class="text-primary">請購人</h5>
+                            <div class="col-6">
+                                <p>
+                                    <strong>工號:</strong>
+                                    <span id="displayStmt-applierId"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>姓名:</strong>
+                                    <span id="displayStmt-applierName"></span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row border-bottom mb-3 pb-2">
+                            <h5 class="text-primary">價格</h5>
+                            <div class="col-6">
+                                <p>
+                                    <strong>單價:</strong>
+                                    <span id="displayStmt-unitPrice"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>數量:</strong>
+                                    <span id="displayStmt-quantity"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>總價:</strong>
+                                    <span id="displayStmt-totalPrice"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>幣別:</strong>
+                                    <span id="displayStmt-currency"></span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row border-bottom mb-3 pb-2">
+                            <h5 class="text-primary">狀態列</h5>
+                            <div class="col-6">
+                                <p>
+                                    <strong>狀態:</strong>
+                                    <span id="displayStmt-status"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>更新日期:</strong>
+                                    <span id="displayStmt-statusUpdateDate"></span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row border-bottom mb-3 pb-2">
+                            <h5 class="text-primary">說明</h5>
+                            <div class="col-6">
+                                <p>
+                                    <strong>用途說明:</strong>
+                                    <span id="displayStmt-description"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>給資材的備註:</strong>
+                                    <span id="displayStmt-remarks"></span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row border-bottom mb-3 pb-2">
+                            <h5 class="text-primary">其他細節</h5>
+                            <div class="col-6">
+                                <p>
+                                    <strong>收貨廠區地址碼:</strong>
+                                    <span id="displayStmt-delieveryOfficeId"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>收貨廠區名稱:</strong>
+                                    <span id="displayStmt-delieveryOfficeName"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>物料類別:</strong>
+                                    <span id="displayStmt-materialType"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>請購類型:</strong>
+                                    <span id="displayStmt-purchaseType"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>專案名稱:</strong>
+                                    <span id="displayStmt-projectName"></span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row border-bottom mb-3 pb-2">
+                            <h5 class="text-primary">日期</h5>
+                            <div class="col-6">
+                                <p>
+                                    <strong>創建日期:</strong>
+                                    <span id="displayStmt-createdDate"></span>
+                                </p>
+                            </div>
+                            <div class="col-6">
+                                <p>
+                                    <strong>修改日期:</strong>
+                                    <span id="displayStmt-modifiedDate"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal 結構: 彈窗修改明細狀態 -->
+    <div class="modal fade" id="stmtChangeStatusModal" tabindex="-1" aria-labelledby="stmtChangeStatusModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title" id="stmtChangeStatusModalLabel">修改狀態</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <select id="changeStmtStatusSelector" class="form-select" aria-label="可選的狀態選單">
+                        <option value="等待物料更新">等待物料更新</option>
+                        <option value="正在集單">正在集單</option>
+                        <option value="請購簽核進行中">請購簽核進行中</option>
+                        <option value="退件等待處置">退件等待處置</option>
+                        <option value="採購中等待收貨">採購中等待收貨</option>
+                        <option value="等待驗收">等待驗收</option>
+                        <option value="已結案">已結案</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">取消</button>
+                <button type="button" class="btn btn-secondary" id="confirmChangeStatusBtn">確認修改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha256-rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js" integrity="sha256-xoh0y6ov0WULfXcLMoaA6nZfszdgI8w2CEJ/3k8NBIE=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/danfojs@1.1.2/lib/bundle.js" integrity="sha256-b4/iTif0LxfGrbF3LLsHwg852tbYcHbLpHMJnY3PsTo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/min/moment.min.js" integrity="sha256-hFxSSWnt1bOvmqbYcY0p/pLo2+JblVIUqOBkoFqaUCc=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment-timezone@0.5.45/builds/moment-timezone-with-data.min.js" integrity="sha256-JATtQzySjqI7GE9O3PpjVjwcGkI8Ny7ESx9Puif0NYY=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha256-CDOy6cOibCWEdsRiZuaHf8dSGGJRYuBGC+mjoJimHGw=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-daterangepicker@3.1.0/daterangepicker.js" integrity="sha256-iOVs1FytPbiP3HcnhtFMzo0MwYebwD5OVr6Rnf2a0ik=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
     <script>
         (() => {
             const resourceName_get = [
-                'suppliers',
-                'employees',
-                'minmaxOffice',
+                'suppliers',            // 供應商表
+                'employees',            // 員工表
+                'projects',             // 專案表
+                'minmaxOffice',         // 捷拓廠區表
+                'materials',            // 物料表
             ];
 
             const dataFrame = {};
+
+            const ReqStmtStatusList = [
+                '等待物料更新',
+                '正在集單',
+                '請購簽核進行中',
+                '退件等待處置',
+                '採購中等待收貨',
+                '等待驗收',
+                '已結案'
+            ];
 
             const dfColNames = [
                 '默認主鍵',
@@ -147,18 +380,17 @@
                 '料號',
                 '品名規格',
                 '請購數量',
-                '預估單價',
-                '金額',
+                '預估單價',,
                 '幣別',
                 '單位',
                 '需求日期',
                 '提交日期',
-                '用途說明',
+                '更多操作',
             ];
 
             const colNameMapping = {
                 'ID': '默認主鍵',
-                '申請人': '申請人工號簡碼',
+                // '申請人': null,
                 '供應商': '供應商簡稱',
                 '料號': '物料代號',
                 // '品名規格': null,
@@ -166,17 +398,18 @@
                 '單位': '單位',
                 '幣別': '幣別',
                 '預估單價': '單價',
-                // '金額': null,
                 '需求日期': '需求到貨日期',
                 '提交日期': '創建時間戳',
-                '用途說明': '用途說明',
+                // '用途說明': '用途說明',
+                // '請購備註': '備註',
             }
+
+            const timezone = 'Asia/Taipei';
 
             let downloadPromises = [];
             let attachmentsDict = {};
             let groupCounter = 0;
             let reqStmtFilterResultDf = null;
-            let searchLock = false;
 
             // 用以讀取主要相依資源
             function fetchResource(resourceName) {
@@ -188,24 +421,14 @@
                         // console.log(`Fetched ${resourceName}`);
                     })
                     .catch(error => console.error(`Error fetching ${resourceName}:`, error));
-            }
-
-            // 查詢指定物料
-            async function searchMaterial({supplierName, materialId}={}) {
-                const url = new URL(`/api/materials`, window.location.origin);
-                url.searchParams.append('supplierName', supplierName);
-                url.searchParams.append('materialId', materialId);
-                const response = await fetch(url);
-                if (response.ok) {
-                    const data = await response.json();
-                    return {'status': '成功', 'data': data[0]}
                 }
-                else
-                    return {'status': '失敗'}
-            }
 
-
-            // 從後端取得檔案
+            /**
+             * Fetches an attachment file from the server using the given prime key.
+             *
+             * @param {string} primeKey - The prime key of the attachment to fetch.
+             * @returns {Promise<File|null>} - A promise that resolves to a File object or null if an error occurs.
+             */
             async function fetchAttachment(primeKey) {
                 try {
                     // 創建URL對象，基於當前頁面的根URL
@@ -256,17 +479,16 @@
              * @param {string} filter.endDate - The end date for the filter.
              * @param {string} filter.applierId - The ID of the applier.
              * @param {Array|string} filter.stmtStatus - The status or statuses of the statements.
-             * @returns {Promise<Object>} - A promise that resolves to an object containing:
-             *                            - {string} status - The status of the fetch operation ('成功', '無資料', or '失敗').
-             *                            - {DataFrame} df - The DataFrame containing the filtered data.
-             *                            - {Object} attachmentsDict - A dictionary of attachments metadata keyed by statement ID.
-             *                            - {Array<Promise>} downloadPromises - An array of promises for downloading attachment files.
+             * @returns {Promise<Object>} - A promise that resolves to an object containing the status and DataFrame of the filtered results.
              */
-            async function fetchPurchaseReqStmt({ startDate, endDate, applierId, stmtStatus } = {}) {
+            async function fetchPurchaseReqStmt({ supplierName, materialId, startDate, endDate, stmtStatus, delieveryOfficeName, applierId } = {}) {
                 try {
                     const url = new URL('/api/purchaseRequestStmts', window.location.origin);
+                    url.searchParams.append('supplierName', supplierName);
+                    url.searchParams.append('materialId', materialId);
                     url.searchParams.append('startDate', startDate);
                     url.searchParams.append('endDate', endDate);
+                    url.searchParams.append('delieveryOfficeName', delieveryOfficeName);
                     url.searchParams.append('applierId', applierId);
                     if (Array.isArray(stmtStatus)) {
                         stmtStatus.forEach(status => url.searchParams.append('stmtStatus', status));
@@ -279,79 +501,134 @@
 
                     if (response.ok) {
                         if (data.queryResult.length === 0) 
-                            return { 'status': '無資料', 'df': new dfd.DataFrame(), 'attachmentsDict': {}, 'downloadPromises': []};
+                            return { 'status': '無資料', 'df': new dfd.DataFrame()};
 
-                        const filterResultDf = new dfd.DataFrame(data.queryResult).drop({ columns: ['附件檔案'], inplace: false });
-                        const attachmentsDict = {};
-                        const downloadPromises = data.queryResult.flatMap(record => {
-                            const key = record["默認主鍵"];
-                            const applierNo = record["申請人工號簡碼"];
-                            const supplierName = record["供應商簡稱"];
-                            const fileMetas = record["附件檔案"];
-
-                            if (fileMetas) {
-                                attachmentsDict[key] = fileMetas.map(fileMeta => {
-                                    const contentType = fileMeta['內容分類'];
-                                    const description = fileMeta['檔案說明'];
-                                    const extension = fileMeta['副檔名'];
-                                    const hash = fileMeta['哈希值'];
-                                    const attr = {
-                                        明細: key,
-                                        請購人: applierNo,
-                                        供應商: supplierName,
-                                        分類: contentType,
-                                        說明: description,
-                                        extension: extension,
-                                        hash: hash,
-                                    };
-                                    const downloadPromise = fetchAttachment(fileMeta['默認主鍵']).then(file => {
-                                        return {
-                                            file: file,
-                                            attr: attr,
-                                        };
-                                    });
-                                    return downloadPromise;
-                                });
-                                return attachmentsDict[key];
-                            }
-                            return [];
-                        });
-
-                        return { 'status': '成功', 'df': filterResultDf, 'attachmentsDict': attachmentsDict, 'downloadPromises': downloadPromises };
+                        // const filterResultDf = new dfd.DataFrame(data.queryResult).drop({ columns: ['附件檔案'], inplace: false });
+                        const filterResultDf = new dfd.DataFrame(data.queryResult);
+                        return { 'status': '成功', 'df': filterResultDf };
                     } else {
                         throw new Error(data.error);
                     }
                 } catch (error) {
                     console.error('Error fetching records:', error);
-                    return { 'status': '失敗', 'df': new dfd.DataFrame(), 'attachmentsDict': {}, 'downloadPromises': []};
+                    return { 'status': '失敗', 'df': new dfd.DataFrame()};
                 }
             }
 
-            async function search() {
-                if (searchLock) {
-                    if (!confirm('重新搜尋將重置當前進度，請問是否繼續？')) return;
+            async function changeStmtStatus() {
+
+            }
+
+            /**
+             * Fetches purchase request statements and loads their attachments based on the provided filter criteria.
+             *
+             * @param {Object} filter - The filter criteria.
+             * @param {string} filter.startDate - The start date for the filter.
+             * @param {string} filter.endDate - The end date for the filter.
+             * @param {string} filter.applierId - The ID of the applier.
+             * @param {Array|string} filter.stmtStatus - The status or statuses of the statements.
+             * @returns {Promise<Object>} - A promise that resolves to an object containing the status, DataFrame of the filtered results, a dictionary of attachments, and an array of download promises.
+             */
+            async function getReqStmtAndLoadAttachment({ supplierName, materialId, startDate, endDate, stmtStatus, delieveryOfficeName, applierId } = {}) {
+                const data = {
+                    supplierName: supplierName,
+                    materialId: materialId,
+                    startDate:startDate,
+                    endDate:endDate,
+                    stmtStatus:stmtStatus,
+                    delieveryOfficeName: delieveryOfficeName,
+                    applierId:applierId
+                };
+                const fetchPurchaseReqStmtReturn = await fetchPurchaseReqStmt(data);
+                
+                if (fetchPurchaseReqStmtReturn.status === '成功') {
+                    const attachmentsDict = {};
+                    const downloadPromises = dfd.toJSON(fetchPurchaseReqStmtReturn.df).flatMap(record => {
+                        const key = record["默認主鍵"];
+                        const applierNo = record["申請人工號簡碼"];
+                        const supplierName = record["供應商簡稱"];
+                        const fileMetas = record["附件檔案"];
+
+                        if (fileMetas) {
+                            attachmentsDict[key] = fileMetas.map(fileMeta => {
+                                const contentType = fileMeta['內容分類'];
+                                const description = fileMeta['檔案說明'];
+                                const extension = fileMeta['副檔名'];
+                                const hash = fileMeta['哈希值'];
+                                const attr = {
+                                    明細: key,
+                                    請購人: applierNo,
+                                    供應商: supplierName,
+                                    分類: contentType,
+                                    說明: description,
+                                    extension: extension,
+                                    hash: hash,
+                                };
+                                const downloadPromise = fetchAttachment(fileMeta['默認主鍵']).then(file => {
+                                    return {
+                                        file: file,
+                                        attr: attr,
+                                    };
+                                });
+                                return downloadPromise;
+                            });
+                            return attachmentsDict[key];
+                        }
+                        return [];
+                    });
+                    const df = fetchPurchaseReqStmtReturn.df.drop({ columns: ['附件檔案'], inplace: false });
+                    return { 'status': '成功', 'df': df, 'attachmentsDict': attachmentsDict, 'downloadPromises': downloadPromises };
                 }
-                searchLock = true;
+                else if (fetchPurchaseReqStmtReturn.status === '無資料')
+                    return { 'status': '無資料', 'df': new dfd.DataFrame(), 'attachmentsDict': {}, 'downloadPromises': [] };
+                else
+                    return { 'status': '失敗', 'df': new dfd.DataFrame(), 'attachmentsDict': {}, 'downloadPromises': [] };
+            }
+
+            /**
+             * Initiates a search for purchase request statements and loads their attachments.
+             *
+             * @returns {Promise<void>}
+             */
+            async function search() {
                 attachmentsDict = {}; // Reset attachmentsDict
 
-                const startDate = document.getElementById('Input-startDate').value || '';
-                const endDate = document.getElementById('Input-endDate').value || '';
+                const supplierName = document.getElementById('Input_supplier').value || '';
+                const materialId = document.getElementById('Input_materialId').value || '';
+                const dateRange = document.getElementById('Input-dateRange').value || '';
+                const [startDate, endDate] = dateRange.split(' - ').map(date => moment(date, 'YYYY/MM/DD').format('YYYY-MM-DD'));
                 const Input_stmtStatus = document.getElementById('Input_stmtStatus').value || '';
-                const stmtStatus = Input_stmtStatus === '' ? ['正在集單', '退件等待處置'] : Input_stmtStatus;
+                const stmtStatus = Input_stmtStatus === '' ? ReqStmtStatusList : Input_stmtStatus;
+                const delieveryOfficeName = document.getElementById('Input_delieveryOffice').value || '';
                 const applierId = document.getElementById('Input_applier').value || '';
 
-                const fetchPurchaseReqStmtReturn = await fetchPurchaseReqStmt({ startDate, endDate, stmtStatus, applierId });
+                const queryAttrDict = {
+                    supplierName: supplierName,
+                    materialId: materialId,
+                    startDate:startDate,
+                    endDate:endDate,
+                    stmtStatus:stmtStatus,
+                    delieveryOfficeName: delieveryOfficeName,
+                    applierId:applierId
+                };
+                const getReqStmtAndLoadAttachmentReturn = await getReqStmtAndLoadAttachment(queryAttrDict);
 
-                if (fetchPurchaseReqStmtReturn.status === '成功' || fetchPurchaseReqStmtReturn.status === '無資料') {
-                    reqStmtFilterResultDf = fetchPurchaseReqStmtReturn.df;
-                    await renderRecords(fetchPurchaseReqStmtReturn.df);
-                    attachmentsDict = fetchPurchaseReqStmtReturn.attachmentsDict; // Store the attachments dictionary
-                    downloadPromises = fetchPurchaseReqStmtReturn.downloadPromises; // Store the download promises
-                } else if (fetchPurchaseReqStmtReturn.status === '失敗') {
+                if (getReqStmtAndLoadAttachmentReturn.status === '成功' || getReqStmtAndLoadAttachmentReturn.status === '無資料') {
+                    reqStmtFilterResultDf = getReqStmtAndLoadAttachmentReturn.df;
+                    await renderRecords(getReqStmtAndLoadAttachmentReturn.df);
+                    attachmentsDict = getReqStmtAndLoadAttachmentReturn.attachmentsDict; // Store the attachments dictionary
+                    downloadPromises = getReqStmtAndLoadAttachmentReturn.downloadPromises; // Store the download promises
+                } else if (getReqStmtAndLoadAttachmentReturn.status === '失敗') {
                     alert('搜尋失敗');
                 }
             }
 
+            /**
+             * Renders the purchase request statements in a table format.
+             *
+             * @param {dfd.DataFrame} df - The DataFrame containing the purchase request statements.
+             * @returns {Promise<void>}
+             */
             async function renderRecords(df) {
                 const container = document.getElementById('records-container');
                 container.innerHTML = '';
@@ -382,18 +659,49 @@
                 dfd.toJSON(df).forEach(async stmtRecord => {
                     const row = document.createElement('tr');
                     row.id = `stmtID-${stmtRecord[colNameMapping['ID']]}`;
-                    const searchResult = await searchMaterial({
-                        supplierName: stmtRecord['供應商簡稱'],
-                        materialId: stmtRecord['物料代號']
-                    });
-                    const totalPrice = parseFloat((stmtRecord['單價'] * stmtRecord['需求數量']).toFixed(3));
+                    let query1 = dataFrame.employees.loc({ rows: dataFrame.employees['工號簡碼'].eq(stmtRecord['申請人工號簡碼']) });
+                    let query2 = dataFrame.materials.loc({ rows: dataFrame.materials['物料代號'].eq(stmtRecord['物料代號']).and(dataFrame.materials['供應商簡稱'].eq(stmtRecord['供應商簡稱'])) });
+                    const employeeName = query1.shape[0] === 1 ? dfd.toJSON(query1)[0]['姓名'] : '';
+                    const partName = query2.shape[0] === 1 ? dfd.toJSON(query2)[0]['品名規格'] : '';
+                    let submitDateObject = stmtRecord['更新時間戳'] || stmtRecord['創建時間戳'];
+                    const submitDate = moment(submitDateObject).tz(timezone).format('YYYY-MM-DD');
+                    
+                    // 創建查看更多資訊按鈕
+                    const moreInfo_btn = document.createElement('button');
+                    moreInfo_btn.type = "button";
+                    moreInfo_btn.classList.add('btn', 'px-2', 'border-0', 'd-flex', 'align-items-center');
+                    moreInfo_btn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-square pe-none" viewBox="0 0 16 16">
+                            <path class="pe-none" d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
+                            <path class="pe-none" d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                        </svg>
+                    `;
+                    moreInfo_btn.onclick = (event) => showStmtDetails(stmtRecord[colNameMapping['ID']]);
+                    
+                    // 創建修改狀態按鈕
+                    const editStatus_btn = document.createElement('button');
+                    editStatus_btn.type = "button";
+                    editStatus_btn.classList.add('btn', 'px-2', 'border-0', 'd-flex', 'align-items-center');
+                    editStatus_btn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-pulse pe-none" viewBox="0 0 16 16">
+                            <path class="pe-none" fill-rule="evenodd" d="M10 1.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5zm-5 0A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5v1A1.5 1.5 0 0 1 9.5 4h-3A1.5 1.5 0 0 1 5 2.5zm-2 0h1v1H3a1 1 0 0 0-1 1V14a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V3.5a1 1 0 0 0-1-1h-1v-1h1a2 2 0 0 1 2 2V14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3.5a2 2 0 0 1 2-2m6.979 3.856a.5.5 0 0 0-.968.04L7.92 10.49l-.94-3.135a.5.5 0 0 0-.895-.133L4.232 10H3.5a.5.5 0 0 0 0 1h1a.5.5 0 0 0 .416-.223l1.41-2.115 1.195 3.982a.5.5 0 0 0 .968-.04L9.58 7.51l.94 3.135A.5.5 0 0 0 11 11h1.5a.5.5 0 0 0 0-1h-1.128z"/>
+                        </svg>
+                    `;
+                    editStatus_btn.onclick = (event) => showStmtStatusEditor(stmtRecord[colNameMapping['ID']]);
 
                     tableColNames.forEach(columnName => {
                         const td = document.createElement('td');
-                        if (columnName === '品名規格' && searchResult.status)
-                            td.textContent = searchResult.data['品名規格'];
-                        else if (columnName === '金額') 
-                            td.textContent = totalPrice;
+                        if (columnName === '申請人')
+                            td.textContent = employeeName;
+                        else if (columnName === '品名規格')
+                            td.textContent = partName;
+                        else if (columnName === '提交日期')
+                            td.textContent = submitDate;
+                        else if (columnName === '更多操作') {
+                            td.classList.add('d-flex');
+                            td.appendChild(moreInfo_btn);
+                            td.appendChild(editStatus_btn);
+                        }
                         else
                             td.textContent = stmtRecord[colNameMapping[columnName]];
                         row.appendChild(td);
@@ -405,229 +713,6 @@
                 table.appendChild(tbody);
                 tableContainer.appendChild(table);
                 container.appendChild(tableContainer);
-
-                Sortable.create(tbody, {
-                    animation: 150,
-                    handle: 'tr',
-                    ghostClass: 'sortable-ghost',
-                    group: 'shared',
-                });
-            }
-
-            function addGroup() {
-                groupCounter++;
-                const groupId = `group-${groupCounter}`;
-                const groupContainer = $('<div class="table-responsive group-container mt-4"></div>');
-                const groupTitle = $(`<h5>Group ${groupCounter}</h5>`);
-                const deleteGroupBtn = $('<button class="btn btn-danger btn-sm my-3 delete-group-btn">Delete Group</button>');
-                const groupTable = $(`
-                    <table class="table table-bordered user-select-none">
-                        <thead>
-                            <tr>
-                                ${tableColNames.map(colName => `<th>${colName}</th>`).join('')}
-                            </tr>
-                        </thead>
-                        <tbody id="${groupId}"></tbody>
-                    </table>
-                `);
-
-                groupContainer.append(groupTitle).append(deleteGroupBtn).append(groupTable);
-                $('#records-container').append(groupContainer);
-
-                Sortable.create(document.getElementById(groupId), {
-                    group: 'shared',
-                    animation: 150,
-                    handle: 'tr',
-                    ghostClass: 'sortable-ghost'
-                });
-
-                deleteGroupBtn.on('click', function () {
-                    const rows = groupContainer.find('tbody tr');
-                    $('#initial-list').append(rows);
-                    groupContainer.remove();
-                });
-
-                // 初始化初始清單的拖曳功能
-                Sortable.create(document.getElementById('initial-list'), {
-                    group: 'shared',
-                    animation: 150,
-                    handle: 'tr',
-                    ghostClass: 'sortable-ghost'
-                });
-            }
-
-            async function generateCSV() {
-                try {
-                    const outputColNames_1 = ['料品代號', '請購數量', '需求日期', '建議廠商', '送貨地址碼', '備註'];
-                    const outputColNames_2 = ['備註摘要', '備註說明'];
-                    const outputColNames_3 = ['明細ID', '供應商簡稱', '單價', '幣別'];
-
-                    await Promise.all(downloadPromises);
-
-                    const groups = extractGroupsFromContainer();
-
-                    if (groups.length === 0) {
-                        throw new Error('No groups to generate CSV.');
-                    }
-
-                    const zip = new JSZip();
-                    await generateZipFolders(zip, groups, outputColNames_1, outputColNames_2, outputColNames_3);
-                    
-                    zip.generateAsync({ type: 'blob' })
-                        .then(content => saveAs(content, '請購單-匯出日=' + new Date().toISOString().split('T')[0] + '.zip'))
-                        .catch(error => console.error('Error generating ZIP file:', error));
-
-                } catch (error) {
-                    console.error(error);
-                    alert(error);
-                    return;
-                }
-            }
-
-            function extractGroupsFromContainer() {
-                return Array.from($('#records-container .group-container tbody')).map(tbody => {
-                    let index = 1;
-                    const rows = Array.from($(tbody).find('tr')).map(tr => extractRowData(tr, index++));
-                    return rows.length > 0 ? rows : null;
-                }).filter(group => group !== null);
-            }
-
-            function extractRowData(tr, index) {
-                const stmtID = Number(tr.id.match(/\d+$/)[0]);
-                let query = reqStmtFilterResultDf.loc({ rows: reqStmtFilterResultDf['默認主鍵'].eq(stmtID) });
-                const stmt = query.shape[0] === 1 ? dfd.toJSON(query)[0] : null;
-                query = dataFrame.suppliers.loc({ rows: dataFrame.suppliers['簡稱'].eq(stmt['供應商簡稱']) });
-                const supplierNo = query.shape[0] === 1 ? query['供應商編號'].values[0] : null;
-                query = dataFrame.minmaxOffice.loc({ rows: dataFrame.minmaxOffice['廠區名稱'].eq(stmt['收貨廠區']) });
-                const OfficeNo = query.shape[0] === 1 ? query['地址碼'].values[0] : null;
-                if (!stmt || !supplierNo || !OfficeNo) {
-                    throw new Error('Something wrong happened when querying result.');
-                }
-
-                return {
-                    '明細ID': stmtID,
-                    '供應商簡稱': stmt['供應商簡稱'],
-                    '單價': stmt['單價'],
-                    '幣別': stmt['幣別'],
-                    '料品代號': stmt['物料代號'],
-                    '請購數量': stmt['需求數量'],
-                    '需求日期': stmt['需求到貨日期'],
-                    '建議廠商': supplierNo,
-                    '送貨地址碼': OfficeNo,
-                    '備註': stmt['備註'],
-                    '備註摘要': '',
-                    '備註說明': stmt['專案名稱'] ? `${index}. [${stmt['專案名稱']}]${stmt['用途說明']}` : stmt['用途說明'] ? `${index}. ${stmt['用途說明']}` : '',
-                    '附件檔案': attachmentsDict[stmtID],
-                };
-            }
-
-            async function generateZipFolders(zip, groups, outputColNames_1, outputColNames_2, outputColNames_3) {
-                const folderPromises = groups.map(async (group, index) => {
-                    const folder = zip.folder('請購單-' + (index + 1));
-                    let csvRowData_1 = [];
-                    let csvRowData_2 = [];
-                    let csvRowData_3 = [];
-                    group.forEach(row => {
-                        csvRowData_1.push(outputColNames_1.map(colName => `"${row[colName]}"`).join(","));
-                        csvRowData_2.push(outputColNames_2.map(colName => `"${row[colName]}"`).join(","));
-                        row['料品代號'] === 'FREIGHT' && csvRowData_3.push(outputColNames_3.map(colName => `"${row[colName]}"`).join(","));
-                    });
-                    if (csvRowData_1.length !== 0) {
-                        const csvContent = '\uFEFF' + outputColNames_1.join(",") + "\n" + csvRowData_1.join("\n");
-                        folder.file('[表單]請購主表單.csv', csvContent);
-                    }
-                    if (csvRowData_2.length !== 0) {
-                        const csvContent = '\uFEFF' + outputColNames_2.join(",") + "\n" + csvRowData_2.join("\n");
-                        folder.file('[表單]備註說明副表單.csv', csvContent);
-                    }
-                    if (csvRowData_3.length !== 0) {
-                        const csvContent = '\uFEFF' + outputColNames_3.join(",") + "\n" + csvRowData_3.join("\n");
-                        folder.file('[補充]運費單價.csv', csvContent);
-                    }
-                    await processAttachments(folder, group);
-                });
-                await Promise.all(folderPromises);
-            }
-
-            async function processAttachments(folder, group) {
-                const attachmentPool = {};
-                const attachmentPromises = group.flatMap(row => {
-                    const attachments = row['附件檔案'];
-                    if (attachments) {
-                        return attachments.map(async attachmentPromise => {
-                            const { file, attr } = await attachmentPromise;
-                            if (!attachmentPool[attr['hash']]) {
-                                attachmentPool[attr['hash']] = {
-                                    file: file,
-                                    extension: attr['extension'],
-                                    明細: new Set().add(attr['明細']),
-                                    請購人: new Set().add(attr['請購人']),
-                                    供應商: new Set().add(attr['供應商']),
-                                    分類: new Set().add(attr['分類']),
-                                    說明: new Set().add(attr['說明']),
-                                };
-                            } else {
-                                attachmentPool[attr['hash']]['明細'].add(attr['明細']);
-                                attachmentPool[attr['hash']]['請購人'].add(attr['請購人']);
-                                attachmentPool[attr['hash']]['供應商'].add(attr['供應商']);
-                                attachmentPool[attr['hash']]['分類'].add(attr['分類']);
-                                attachmentPool[attr['hash']]['說明'].add(attr['說明']);
-                            }
-                        });
-                    }
-                    return [];
-                });
-                await Promise.all(attachmentPromises);
-                for (let attachment of Object.values(attachmentPool)) {
-                    const attr = [];
-                    const stmt_id_str = formatNumberRanges(Array.from(attachment['明細']));
-                    attr.push(`明細[${stmt_id_str}]`);
-                    attr.push(`請購人[${Array.from(attachment['請購人']).join(',')}]`);
-                    attr.push(`供應商[${Array.from(attachment['供應商']).join(',')}]`);
-                    attr.push(`分類[${Array.from(attachment['分類']).join(',')}]`);
-                    attr.push(`說明[${Array.from(attachment['說明']).join(',')}]`);
-                    const filename = `${attr.join('_')}.${attachment['extension']}`;
-                    const file = attachment['file'];
-                    folder.file(filename, file);
-                }
-            }
-
-            function formatNumberRanges(attachmentIds) {
-                // 將 Set 轉換為排序過的列表
-                let sortedList = Array.from(attachmentIds).map(Number).sort((a, b) => a - b);
-
-                // 初始化變數
-                let ranges = [];
-                let currentRange = [];
-
-                // 遍歷排序過的列表來檢查連續的數字
-                for (let number of sortedList) {
-                    if (currentRange.length === 0) {
-                        currentRange.push(number);
-                    } else if (number === currentRange[currentRange.length - 1] + 1) {
-                        currentRange.push(number);
-                    } else {
-                        if (currentRange.length > 1) {
-                            ranges.push(`${currentRange[0]}~${currentRange[currentRange.length - 1]}`);
-                        } else {
-                            ranges.push(`${currentRange[0]}`);
-                        }
-                        currentRange = [number];
-                    }
-                }
-
-                // 處理最後一個範圍
-                if (currentRange.length > 0) {
-                    if (currentRange.length > 1) {
-                        ranges.push(`${currentRange[0]}~${currentRange[currentRange.length - 1]}`);
-                    } else {
-                        ranges.push(`${currentRange[0]}`);
-                    }
-                }
-
-                // 組裝最終的字串
-                let resultString = `${ranges.join(',')}`;
-                return resultString;
             }
             
             // 為指定的 <select> OR <datalist> 設置選項，首先清除所有現有選項，然後添加一個預設選項和選項清單
@@ -688,20 +773,189 @@
                     videoPlayer.classList.add('d-none');
                     audioPlayer.classList.add('d-none');
                 }, { once: true });
+            }
 
+            /**
+             * Fills the statement details modal with the provided data.
+             *
+             * @param {Object} data - The data object containing statement details.
+             * @param {string|number} data.stmtId - The statement ID.
+             * @param {string} data.OfficialReqFormId - The official request form ID.
+             * @param {string} data.supplierId - The supplier ID.
+             * @param {string} data.supplierName - The supplier name.
+             * @param {string} data.materialId - The material ID.
+             * @param {string} data.partName - The part name.
+             * @param {string} data.applierId - The applier ID.
+             * @param {string} data.applierName - The applier name.
+             * @param {string} data.unitPrice - The unit price.
+             * @param {string} data.quantity - The quantity.
+             * @param {string} data.totalPrice - The total price.
+             * @param {string} data.currency - The currency.
+             * @param {string} data.status - The status.
+             * @param {string} data.statusUpdateDate - The status update date.
+             * @param {string} data.description - The description.
+             * @param {string} data.remarks - The remarks.
+             * @param {string} data.delieveryOfficeId - The delivery office ID.
+             * @param {string} data.delieveryOfficeName - The delivery office name.
+             * @param {string} data.materialType - The material type.
+             * @param {string} data.purchaseType - The purchase type.
+             * @param {string} data.projectName - The project name.
+             * @param {string} data.createdDate - The created date.
+             * @param {string} data.modifiedDate - The modified date.
+             *
+             * This function updates the text content of various elements in the statement details modal
+             * with the corresponding values from the provided data object.
+             */
+            function fillStmtDetailsModalData(data) {
+                document.getElementById("displayStmt-stmtId").innerText = data.stmtId;
+                document.getElementById("displayStmt-OfficialReqFormId").innerText = data.OfficialReqFormId;
+                document.getElementById("displayStmt-supplierId").innerText = data.supplierId;
+                document.getElementById("displayStmt-supplierName").innerText = data.supplierName;
+                document.getElementById("displayStmt-materialId").innerText = data.materialId;
+                document.getElementById("displayStmt-partName").innerText = data.partName;
+                document.getElementById("displayStmt-applierId").innerText = data.applierId;
+                document.getElementById("displayStmt-applierName").innerText = data.applierName;
+                document.getElementById("displayStmt-unitPrice").innerText = data.unitPrice;
+                document.getElementById("displayStmt-quantity").innerText = data.quantity;
+                document.getElementById("displayStmt-totalPrice").innerText = data.totalPrice;
+                document.getElementById("displayStmt-currency").innerText = data.currency;
+                document.getElementById("displayStmt-status").innerText = data.status;
+                document.getElementById("displayStmt-statusUpdateDate").innerText = data.statusUpdateDate;
+                document.getElementById("displayStmt-description").innerText = data.description;
+                document.getElementById("displayStmt-remarks").innerText = data.remarks;
+                document.getElementById("displayStmt-delieveryOfficeId").innerText = data.delieveryOfficeId;
+                document.getElementById("displayStmt-delieveryOfficeName").innerText = data.delieveryOfficeName;
+                document.getElementById("displayStmt-materialType").innerText = data.materialType;
+                document.getElementById("displayStmt-purchaseType").innerText = data.purchaseType;
+                document.getElementById("displayStmt-projectName").innerText = data.projectName;
+                document.getElementById("displayStmt-createdDate").innerText = data.createdDate;
+                document.getElementById("displayStmt-modifiedDate").innerText = data.modifiedDate;
+            }
+
+            /**
+             * Displays the details of a statement in a modal.
+             *
+             * @param {number|string} stmt_id - The ID of the statement to display.
+             *
+             * This function retrieves details for a given statement ID from various data frames and formats the data
+             * into a structured object. If the statement is found, it fills a modal with the details and displays it.
+             * If the statement is not found, it alerts the user and logs an error.
+             *
+             * Data is retrieved from the following sources:
+             * - Statement filter result data frame (reqStmtFilterResultDf)
+             * - Employees data frame (dataFrame.employees)
+             * - Materials data frame (dataFrame.materials)
+             * - Suppliers data frame (dataFrame.suppliers)
+             * - MinMax office data frame (dataFrame.minmaxOffice)
+             *
+             * The function also formats dates and calculates total price where applicable.
+             *
+             * Errors are handled by alerting the user and logging the error to the console.
+             */
+            function showStmtDetails(stmt_id) {
+                let query1 = reqStmtFilterResultDf.loc({ rows: reqStmtFilterResultDf['默認主鍵'].eq(stmt_id) });
+                if (query1.shape[0] !== 1) {
+                    alert('檢視明細內容失敗！');
+                    console.error('檢視明細內容失敗！');
+                    return;
+                }
+                const stmtRecord = dfd.toJSON(query1)[0];
+                let query2 = dataFrame.employees.loc({ rows: dataFrame.employees['工號簡碼'].eq(stmtRecord['申請人工號簡碼']) });
+                let query3 = dataFrame.materials.loc({ rows: dataFrame.materials['物料代號'].eq(stmtRecord['物料代號']).and(dataFrame.materials['供應商簡稱'].eq(stmtRecord['供應商簡稱'])) });
+                let query4 = dataFrame.suppliers.loc({ rows: dataFrame.suppliers['簡稱'].eq(stmtRecord['供應商簡稱']) });
+                let query5 = dataFrame.minmaxOffice.loc({ rows: dataFrame.minmaxOffice['廠區名稱'].eq(stmtRecord['收貨廠區']) });
+                const employeeName = query2.shape[0] === 1 ? dfd.toJSON(query2)[0]['姓名'] : '';
+                const partName = query3.shape[0] === 1 ? dfd.toJSON(query3)[0]['品名規格'] : '';
+                const supplierId = query4.shape[0] === 1 ? dfd.toJSON(query4)[0]['供應商編號'] : '';
+                const delieveryOfficeId = query5.shape[0] === 1 ? dfd.toJSON(query5)[0]['地址碼'] : '';
+                const totalPrice = stmtRecord['單價'] && stmtRecord['需求數量'] ? parseFloat((stmtRecord['單價'] * stmtRecord['需求數量']).toFixed(3)) : '';
+                const statusUpdateDate = moment(stmtRecord['狀態更新時間戳']).tz(timezone).format('YYYY-MM-DD') || '';
+                const createdDate = moment(stmtRecord['創建時間戳']).tz(timezone).format('YYYY-MM-DD') || '';
+                const modifiedDate = moment(stmtRecord['更新時間戳']).tz(timezone).format('YYYY-MM-DD') || '';
+                const data = {
+                    stmtId: stmtRecord['默認主鍵'] || '',
+                    OfficialReqFormId: stmtRecord['資材部請購單號'] || '',
+                    supplierId: supplierId || '',
+                    supplierName: stmtRecord['供應商簡稱'] || '',
+                    materialId: stmtRecord['物料代號'] || '',
+                    partName: partName || '',
+                    applierId: stmtRecord['申請人工號簡碼'] || '',
+                    applierName: employeeName || '',
+                    unitPrice: stmtRecord['單價'] || '',
+                    quantity: stmtRecord['需求數量'] || '',
+                    totalPrice: totalPrice || '',
+                    currency: stmtRecord['幣別'] || '',
+                    status: stmtRecord['狀態'] || '',
+                    statusUpdateDate: statusUpdateDate || '',
+                    description: stmtRecord['用途說明'] || '',
+                    remarks: stmtRecord['備註'] || '',
+                    delieveryOfficeId: delieveryOfficeId || '',
+                    delieveryOfficeName: stmtRecord['收貨廠區'] || '',
+                    materialType: stmtRecord['物料類別'] || '',
+                    purchaseType: stmtRecord['請購類型'] || '',
+                    projectName: stmtRecord['專案名稱'] || '',
+                    createdDate: createdDate || '',
+                    modifiedDate: modifiedDate || '',
+                };
+                fillStmtDetailsModalData(data);
+                new bootstrap.Modal(document.getElementById('stmtDetailsModal')).show();
+            }
+
+            function uploadStmtStatus(stmt_id, status) {
+
+            }
+
+            function showStmtStatusEditor(stmt_id) {
+
+            }
+
+            /**
+             * Initializes a date range picker on an input element with specific settings.
+             *
+             * This function configures a date range picker with predefined ranges, localization options,
+             * and other settings such as the date format, min and max date limits.
+             */
+            function initializeDateRangePicker() {
+                const input = document.querySelector('input[name="daterange"]');
+                if (!input) return;
+
+                new daterangepicker(input, {
+                    ranges: {
+                        '一周': [moment().subtract(7, 'days'), moment().subtract(1, 'days')],
+                        '昨天': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                        '今天': [moment(), moment()],
+                    },
+                    locale: {
+                        format: 'YYYY/MM/DD',
+                        separator: ' - ',
+                        applyLabel: '確認',
+                        cancelLabel: '取消',
+                        customRangeLabel: '自訂範圍',
+                        daysOfWeek: ['日', '一', '二', '三', '四', '五', '六'],
+                        monthNames: ['1 月', '2 月', '3 月', '4 月', '5 月', '6 月', '7 月', '8 月', '9 月', '10 月', '11 月', '12 月'],
+                        firstDay: 1
+                    },
+                    startDate: moment().subtract(7, 'days'),
+                    endDate: moment().subtract(1, 'days'),
+                    minDate: '1990/08/07',
+                    maxDate: moment(),
+                });
             }
 
             window.addEventListener('load', () => setDFlexElmVisibility(document.getElementById('search-btn'), true), false);
 
             function startUp() {
                 Promise.all(resourceName_get.map(fetchResource)).then(() => {
-                    setupSelectOptions(document.getElementById('employee_datalist'), dataFrame.employees['工號簡碼'].values); //申請人
+                    setupSelectOptions(document.getElementById('material_datalist'), dataFrame.materials['物料代號'].values);           // 物料表>料號
+                    setupSelectOptions(document.getElementById('supplier_datalist'), dataFrame.materials['供應商簡稱'].values);         // 物料表>供應商
+                    setupSelectOptions(document.getElementById('employee_datalist'), dataFrame.employees['工號簡碼'].values);           // 申請人
+                    setupSelectOptions(document.getElementById('Input_delieveryOffice'), dataFrame.minmaxOffice['廠區名稱'].values);    // 收貨廠區
                 })
                     .catch(error => console.error('Error during startup:', error));
 
                 document.getElementById('search-btn').addEventListener('click', search, false);
-                document.getElementById('addGroup-btn').addEventListener('click', addGroup, false);
-                document.getElementById('generateCSV-btn').addEventListener('click', generateCSV, false);
+
+                initializeDateRangePicker();
             }
             window.addEventListener('DOMContentLoaded', startUp, false);
         })();
