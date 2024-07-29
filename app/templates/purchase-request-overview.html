@@ -515,8 +515,46 @@
                 }
             }
 
-            async function changeStmtStatus() {
+            async function patchPurchaseReqStmt(stmt_id, PurchaseReqStmtFormValues) {
+                try {
+                    const url = new URL(`/api/purchaseRequestStmts/${stmt_id}`, window.location.origin);
+                    const response = await fetch(url, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(PurchaseReqStmtFormValues)
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        return {'status': '上傳成功', 'message': data.message};
+                    }
+                    else {
+                        throw new Error(data.error);
+                    }
+                } catch (error) {
+                    console.error('Error:', error.message);
+                    return {'status': '上傳失敗', 'message': error.message};
+                }
+            }
 
+            async function changeStmtStatus(stmt_id, status) {
+                let form = {
+                    '狀態': status
+                };
+                await patchPurchaseReqStmt(stmt_id, form);
+            }
+
+            function showStmtStatusEditor(stmt_id) {
+                let modal = new bootstrap.Modal(document.getElementById('stmtChangeStatusModal'));
+                modal.show();
+                document.getElementById('confirmChangeStatusBtn').addEventListener(
+                    'click', () => {
+                        changeStmtStatus(stmt_id, document.getElementById('changeStmtStatusSelector').value);
+                        modal.hide();
+                    },
+                    { once: true }
+                );
             }
 
             /**
@@ -899,14 +937,6 @@
                 };
                 fillStmtDetailsModalData(data);
                 new bootstrap.Modal(document.getElementById('stmtDetailsModal')).show();
-            }
-
-            function uploadStmtStatus(stmt_id, status) {
-
-            }
-
-            function showStmtStatusEditor(stmt_id) {
-
             }
 
             /**

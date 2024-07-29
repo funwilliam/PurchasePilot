@@ -28,6 +28,6 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int, default=int(os.getenv('FLASK_RUN_PORT', 3636)), help='Port to run the Flask app on')
     args = parser.parse_args()
     
-    # serve(app, host='0.0.0.0', port=args.port, threads=8)
+    serve(app, host='0.0.0.0', port=args.port, threads=8)
     # app.run(host='0.0.0.0', port=args.port, debug=True)
-    app.run(host='0.0.0.0', port=3636, debug=True)
+    # app.run(host='0.0.0.0', port=3636, debug=True)

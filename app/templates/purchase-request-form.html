@@ -612,7 +612,7 @@
             }
 
             // 上傳請購明細
-            async function uploadPurchaseReqStmt(PurchaseReqStmtFormValues) {
+            async function postPurchaseReqStmt(PurchaseReqStmtFormValues) {
                 try {
                     const url = new URL('/api/purchaseRequestStmts', window.location.origin);
                     const response = await fetch(url, {
@@ -631,35 +631,35 @@
                     }
                 } catch (error) {
                     console.error('Error:', error.message);
-                    return {'status': '上傳失敗', 'message': error.message}
+                    return {'status': '上傳失敗', 'message': error.message};
                 }
             }
 
-            async function bindStmtWithAttachment({purchaseRequestStmtPrimeKey, filePrimeKey}={}) {
-                try {
-                    const url = new URL('/api/bind/purchaseRequestStmt-attachment', window.location.origin);
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            purchaseRequestStmtPrimeKey: purchaseRequestStmtPrimeKey,
-                            filePrimeKey: filePrimeKey,
-                        })
-                    });
-                    const data = await response.json();
-                    if (response.ok) {
-                        return {'status': '綁定成功', 'message': data.message};
-                    }
-                    else {
-                        throw new Error(data.error);
-                    }
-                } catch (error) {
-                    console.error('Error: 請購明細與附件綁定失敗\n' + error.message);
-                    return {'status': '綁定失敗', 'message': error.message};
-                }
-            }
+            // async function bindStmtWithAttachment({purchaseRequestStmtPrimeKey, filePrimeKey}={}) {
+            //     try {
+            //         const url = new URL('/api/bind/purchaseRequestStmt-attachment', window.location.origin);
+            //         const response = await fetch(url, {
+            //             method: 'POST',
+            //             headers: {
+            //                 'Content-Type': 'application/json'
+            //             },
+            //             body: JSON.stringify({
+            //                 purchaseRequestStmtPrimeKey: purchaseRequestStmtPrimeKey,
+            //                 filePrimeKey: filePrimeKey,
+            //             })
+            //         });
+            //         const data = await response.json();
+            //         if (response.ok) {
+            //             return {'status': '綁定成功', 'message': data.message};
+            //         }
+            //         else {
+            //             throw new Error(data.error);
+            //         }
+            //     } catch (error) {
+            //         console.error('Error: 請購明細與附件綁定失敗\n' + error.message);
+            //         return {'status': '綁定失敗', 'message': error.message};
+            //     }
+            // }
 
             // 重新導向至物料表單
             function redirectToMaterialForm(type) {
@@ -834,7 +834,7 @@
                 if (failedAttachmentChecks.length === 0 && failedFormValueChecks.length === 0) {
                     const submit_promises = StmtFormValueBuffers.map(async stmt => {
                         Object.values(fileBuffer).forEach(buffer => stmt.附件檔案.push(buffer.默認主鍵));
-                        let uploadReturn = await uploadPurchaseReqStmt(stmt);
+                        let uploadReturn = await postPurchaseReqStmt(stmt);
                     });
                     await Promise.all(submit_promises);
 

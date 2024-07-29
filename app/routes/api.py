@@ -428,10 +428,9 @@ def get_purchaseRequestStmt_resource():
         start_date = request.args.get('startDate')
         end_date = request.args.get('endDate')
         stmt_status = request.args.getlist('stmtStatus')
-        delievery_office_name = request.args.getlist('delieveryOfficeName')
+        delievery_office_name = request.args.get('delieveryOfficeName')
         applier_id = request.args.get('applierId')
         
-
         # 設置台灣時區
         tz = utils.get_tz()
 
@@ -556,23 +555,24 @@ def post_purchaseRequestStmt_resource():
             raise ValueError(f'Lost required column value: {str(lost_cols)}')
 
         # 檢查附件
-        for attachment_pk in new_purchaseReqStmt_attachment_pks:
-            attachment_record = 檔案.query.filter_by(默認主鍵=uuid.UUID(attachment_pk)).scalar()
-            if attachment_record:
-                full_file_path = attachment_root_storage_folder / attachment_record.檔案路徑
-                if full_file_path.exists():
-                    attachments_records.append(attachment_record)
+        if new_purchaseReqStmt_attachment_pks:
+            for attachment_pk in new_purchaseReqStmt_attachment_pks:
+                attachment_record = 檔案.query.filter_by(默認主鍵=uuid.UUID(attachment_pk)).scalar()
+                if attachment_record:
+                    full_file_path = attachment_root_storage_folder / attachment_record.檔案路徑
+                    if full_file_path.exists():
+                        attachments_records.append(attachment_record)
+                    else:
+                        attachment_record.delete()
+                        raise FileNotFoundError(f'This attachment_record primeKey={attachment_pk} has been removed improperly. To maintain system stability, this data row will be deleted.')
                 else:
-                    attachment_record.delete()
-                    raise FileNotFoundError(f'This attachment_record primeKey={attachment_pk} has been removed improperly. To maintain system stability, this data row will be deleted.')
-            else:
-                raise ValueError(f'This attachment_record primeKey={attachment_pk} is not found in the database.')
-                
-        # 將新記錄添加到數據庫並提交
-        new_purchaseReqStmt.new()
-        for attachments_record in attachments_records:
-            new_purchaseReqStmt.附件檔案.append(attachments_record)
-        new_purchaseReqStmt.update()
+                    raise ValueError(f'This attachment_record primeKey={attachment_pk} is not found in the database.')
+                    
+            # 將新記錄添加到數據庫並提交
+            new_purchaseReqStmt.new()
+            for attachments_record in attachments_records:
+                new_purchaseReqStmt.附件檔案.append(attachments_record)
+            new_purchaseReqStmt.update()
 
         # 標記附件紀錄為正確狀態並移動至正確資料夾
         for attachments_record in attachments_records:
@@ -663,7 +663,7 @@ def patch_purchaseRequestStmt_resource(prime_key):
 
         current_stmt_record.供應商簡稱 = stmt_changes.供應商簡稱 or current_stmt_record.供應商簡稱
         current_stmt_record.物料代號 = stmt_changes.物料代號 or current_stmt_record.物料代號
-        material = 物料.query.filter_by(供應商簡稱=stmt_changes.供應商簡稱, 物料代號=stmt_changes.物料代號).scalar()
+        material = 物料.query.filter_by(供應商簡稱=current_stmt_record.供應商簡稱, 物料代號=current_stmt_record.物料代號).scalar()
         
         # 檢查物料
         if current_stmt_record.物料代號 == 'FREIGHT':
@@ -704,7 +704,7 @@ def patch_purchaseRequestStmt_resource(prime_key):
         if stmt_changes.狀態 != current_stmt_record.狀態:
             current_stmt_record.狀態 = stmt_changes.狀態
             current_stmt_record.狀態更新時間戳 = datetime.now(utils.get_tz())
-        current_stmt_record.資材部請購單號 = stmt_changes.資材部請購單號 or current_stmt_record.資材部請購單號備註
+        current_stmt_record.資材部請購單號 = stmt_changes.資材部請購單號 or current_stmt_record.資材部請購單號
         current_stmt_record.更新時間戳 = datetime.now(utils.get_tz())
 
         # 檢查紀錄是否缺少任何必要欄位
@@ -736,23 +736,24 @@ def patch_purchaseRequestStmt_resource(prime_key):
             raise ValueError(f'Lost required column value: {str(lost_cols)}')
         
         # 檢查附件
-        for attachment_pk in new_purchaseReqStmt_attachment_pks:
-            attachment_record = 檔案.query.filter_by(默認主鍵=uuid.UUID(attachment_pk)).scalar()
-            if attachment_record:
-                full_file_path = attachment_root_storage_folder / attachment_record.檔案路徑
-                if full_file_path.exists():
-                    new_attachments_records.append(attachment_record)
+        if new_purchaseReqStmt_attachment_pks:
+            for attachment_pk in new_purchaseReqStmt_attachment_pks:
+                attachment_record = 檔案.query.filter_by(默認主鍵=uuid.UUID(attachment_pk)).scalar()
+                if attachment_record:
+                    full_file_path = attachment_root_storage_folder / attachment_record.檔案路徑
+                    if full_file_path.exists():
+                        new_attachments_records.append(attachment_record)
+                    else:
+                        attachment_record.delete()
+                        raise FileNotFoundError(f'This attachment_record primeKey={attachment_pk} has been removed improperly. To maintain system stability, this data row will be deleted.')
                 else:
-                    attachment_record.delete()
-                    raise FileNotFoundError(f'This attachment_record primeKey={attachment_pk} has been removed improperly. To maintain system stability, this data row will be deleted.')
-            else:
-                raise ValueError(f'This attachment_record primeKey={attachment_pk} is not found in the database.')
-            
-        # 更新請購明細記錄以及其附件連結
-        current_stmt_record.附件檔案.clear()
-        for attachments_record in new_attachments_records:
-            current_stmt_record.附件檔案.append(attachments_record)
-        current_stmt_record.update()
+                    raise ValueError(f'This attachment_record primeKey={attachment_pk} is not found in the database.')
+                
+            # 更新請購明細記錄以及其附件連結
+            current_stmt_record.附件檔案.clear()
+            for attachments_record in new_attachments_records:
+                current_stmt_record.附件檔案.append(attachments_record)
+            current_stmt_record.update()
 
         # 標記附件紀錄為正確狀態並移動至正確資料夾
         for attachments_record in new_attachments_records:
