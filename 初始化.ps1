@@ -13,9 +13,14 @@ Set-Location -Path $scriptPath
 # 顯示進度：導航到腳本所在目錄
 Write-Host "導航到腳本所在目錄：$scriptPath"
 
-# 建立虛擬環境
-Write-Host "建立虛擬環境..."
-python -m venv venv
+# 檢查虛擬環境是否已存在
+if (Test-Path -Path ".\venv") {
+    Write-Host "虛擬環境已存在，跳過建立步驟。"
+} else {
+    # 建立虛擬環境
+    Write-Host "建立虛擬環境..."
+    python -m venv venv
+}
 
 # 進入虛擬環境
 Write-Host "進入虛擬環境..."

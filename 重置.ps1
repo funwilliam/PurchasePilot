@@ -12,16 +12,6 @@ Set-Location -Path $scriptPath
 
 Pause
 
-# 檢查是否有活動的虛擬環境
-if ($null -ne $env:VIRTUAL_ENV) {
-    Write-Host "退出虛擬環境..."
-    & .\venv\Scripts\deactivate
-} else {
-    Write-Host "無活動的虛擬環境。"
-}
-
-Pause
-
 # 等待虛擬環境關閉
 Start-Sleep -Seconds 2
 

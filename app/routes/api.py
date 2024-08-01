@@ -554,6 +554,9 @@ def post_purchaseRequestStmt_resource():
         if len(lost_cols) > 0:
             raise ValueError(f'Lost required column value: {str(lost_cols)}')
 
+        # 將新記錄添加到數據庫並提交
+        new_purchaseReqStmt.new()
+
         # 檢查附件
         if new_purchaseReqStmt_attachment_pks:
             for attachment_pk in new_purchaseReqStmt_attachment_pks:
@@ -568,23 +571,22 @@ def post_purchaseRequestStmt_resource():
                 else:
                     raise ValueError(f'This attachment_record primeKey={attachment_pk} is not found in the database.')
                     
-            # 將新記錄添加到數據庫並提交
-            new_purchaseReqStmt.new()
+            # 將附件與紀錄關聯
             for attachments_record in attachments_records:
                 new_purchaseReqStmt.附件檔案.append(attachments_record)
             new_purchaseReqStmt.update()
 
-        # 標記附件紀錄為正確狀態並移動至正確資料夾
-        for attachments_record in attachments_records:
-            if attachments_record.快取:
-                attachments_record.快取 = False
-                old_full_file_path = attachment_root_storage_folder / attachments_record.檔案路徑
-                new_relative_file_path = Path(attachments_record.內容分類) / f'{attachments_record.默認主鍵}.{attachments_record.副檔名}'
-                new_full_file_path = attachment_root_storage_folder / new_relative_file_path
-                new_full_file_path.parent.mkdir(parents=True, exist_ok=True)
-                old_full_file_path.rename(new_full_file_path)
-                attachments_record.檔案路徑 = str(new_relative_file_path)
-                attachments_record.update()
+            # 標記附件紀錄為正確狀態並移動至正確資料夾
+            for attachments_record in attachments_records:
+                if attachments_record.快取:
+                    attachments_record.快取 = False
+                    old_full_file_path = attachment_root_storage_folder / attachments_record.檔案路徑
+                    new_relative_file_path = Path(attachments_record.內容分類) / f'{attachments_record.默認主鍵}.{attachments_record.副檔名}'
+                    new_full_file_path = attachment_root_storage_folder / new_relative_file_path
+                    new_full_file_path.parent.mkdir(parents=True, exist_ok=True)
+                    old_full_file_path.rename(new_full_file_path)
+                    attachments_record.檔案路徑 = str(new_relative_file_path)
+                    attachments_record.update()
 
         # 新增請購明細更新紀錄
         stmt_change_log.請購明細主鍵 = new_purchaseReqStmt.默認主鍵
@@ -619,9 +621,11 @@ def post_purchaseRequestStmt_resource():
 
     except ValueError as e:
         print(e)
+        traceback.print_exc()
         return jsonify({'error': 'Value Error', 'message': str(e)}), 400
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return jsonify({'error': 'Server Error', 'message': str(e)}), 500
     
 @api.route('/purchaseRequestStmts/<int:prime_key>', methods=['PATCH'])
@@ -755,17 +759,17 @@ def patch_purchaseRequestStmt_resource(prime_key):
                 current_stmt_record.附件檔案.append(attachments_record)
             current_stmt_record.update()
 
-        # 標記附件紀錄為正確狀態並移動至正確資料夾
-        for attachments_record in new_attachments_records:
-            if attachments_record.快取:
-                attachments_record.快取 = False
-                old_full_file_path = attachment_root_storage_folder / attachments_record.檔案路徑
-                new_relative_file_path = Path(attachments_record.內容分類) / f'{attachments_record.默認主鍵}.{attachments_record.副檔名}'
-                new_full_file_path = attachment_root_storage_folder / new_relative_file_path
-                new_full_file_path.parent.mkdir(parents=True, exist_ok=True)
-                old_full_file_path.rename(new_full_file_path)
-                attachments_record.檔案路徑 = str(new_relative_file_path)
-                attachments_record.update()
+            # 標記附件紀錄為正確狀態並移動至正確資料夾
+            for attachments_record in new_attachments_records:
+                if attachments_record.快取:
+                    attachments_record.快取 = False
+                    old_full_file_path = attachment_root_storage_folder / attachments_record.檔案路徑
+                    new_relative_file_path = Path(attachments_record.內容分類) / f'{attachments_record.默認主鍵}.{attachments_record.副檔名}'
+                    new_full_file_path = attachment_root_storage_folder / new_relative_file_path
+                    new_full_file_path.parent.mkdir(parents=True, exist_ok=True)
+                    old_full_file_path.rename(new_full_file_path)
+                    attachments_record.檔案路徑 = str(new_relative_file_path)
+                    attachments_record.update()
 
         # 新增請購明細更新紀錄
         stmt_change_log.請購明細主鍵 = current_stmt_record.默認主鍵
