@@ -43,10 +43,11 @@ def waitress_entrypoint():
     return create_app(use_waitress = True)
 
 if __name__ == '__main__':
-    app = create_app()
     parser = ArgumentParser(description='Run the Flask app.')
     parser.add_argument('--port', type=int, default=int(os.getenv('FLASK_RUN_PORT', 3636)), help='Port to run the Flask app on')
     args = parser.parse_args()
     
-    # serve(app, host='0.0.0.0', port=args.port, threads=8)
+    # serve(create_app(use_waitress=True), host='0.0.0.0', port=args.port, threads=8)
+    
+    app = create_app()
     app.run(host='0.0.0.0', port=args.port, debug=True)

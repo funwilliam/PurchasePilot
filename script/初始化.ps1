@@ -1,17 +1,13 @@
-﻿$OutputEncoding = [System.Text.Encoding]::UTF8
-chcp 65001
-
-Write-Host "已設定編碼為UTF8"
-Pause
-
-# 獲取腳本所在目錄
+﻿# 目錄導航
 $scriptPath = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
+$projectRootPath = Split-Path -Path $scriptPath -Parent
 
-# 導航到腳本所在目錄
+# 載入模組
 Set-Location -Path $scriptPath
+Import-Module -Name .\UserDefinedToolkit
 
-# 顯示進度：導航到腳本所在目錄
-Write-Host "導航到腳本所在目錄：$scriptPath"
+# 切換到專案根目錄
+Set-Location -Path $projectRootPath
 
 # 檢查虛擬環境是否已存在
 if (Test-Path -Path ".\venv") {
