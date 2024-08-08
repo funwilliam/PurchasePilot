@@ -51,7 +51,7 @@ Write-Host "進入虛擬環境..."
 Write-Host "虛擬環境已啟用"
 
 # 設置運行主機和端口
-$serverHost  = "127.0.0.1"
+$serverHost  = "localhost"
 $port = "3636"
 $threadQuantity = "8"
 $wsgiFactoryFunc = "run:waitress_entrypoint"
@@ -65,11 +65,11 @@ else {
     Write-Host "正在啟動伺服器..."
 }
 # $process = Start-Process "waitress-serve" -WindowStyle Hidden -PassThru -ArgumentList "--host=$serverHost --port=$port --threads=$threadQuantity --call $wsgiFactoryFunc"
-$process = Start-Process "python" -WindowStyle Hidden -PassThru -ArgumentList "-m waitress --host=$serverHost --port=$port --call $wsgiFactoryFunc"
+$process = Start-Process "python" -WindowStyle Hidden -PassThru -ArgumentList "-m waitress --host=$serverHost --port=$port --threads=$threadQuantity --call $wsgiFactoryFunc"
 Set-Content -Path $pidFile -Value $process.Id -Encoding UTF8
 $URL | Set-Clipboard
 Write-Host "伺服器已在背景運行，PID: $($process.Id)" -ForegroundColor Green
-Write-Host "$($URL) ->已複製到剪貼版"
+Write-Host "程序運行在 $($URL) ->已複製到剪貼版"
 
 # # 添加防火牆規則: 開放http, https port
 # Write-Host "正在添加防火牆規則..."

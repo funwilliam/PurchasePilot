@@ -52,17 +52,17 @@ else {
 
 # # 刪除防火牆規則
 # if ($isRunning) {
-# 	try {
-# 		Write-Host "正在刪除防火牆規則..."
+#     try {
+#         Write-Host "正在刪除防火牆規則..."
 #         Remove-FirewallRule -ruleName "AllowPurchasePilotHTTP"
 #         Remove-FirewallRule -ruleName "AllowPurchasePilotHTTPS"
-# 	}
-# 	catch {
-# 		Write-Host "刪除防火牆規則時發生錯誤。" -ForegroundColor Red
-# 	}
+#     }
+#     catch {
+#         Write-Host "刪除防火牆規則時發生錯誤。" -ForegroundColor Red
+#     }
 # }
 # else {
-# 	Write-Host "警告: 伺服器未運行or關閉時發生錯誤，因此未執行刪除防火牆規則: AllowPurchasePilotHTTP, AllowPurchasePilotHTTPS" -ForegroundColor Yellow
+#     Write-Host "警告: 伺服器未運行or關閉時發生錯誤，因此未執行刪除防火牆規則: AllowPurchasePilotHTTP, AllowPurchasePilotHTTPS" -ForegroundColor Yellow
 # }
 
 Pause
