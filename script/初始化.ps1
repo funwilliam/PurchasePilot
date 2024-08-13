@@ -50,9 +50,14 @@ Pause
 Write-Host "輸入資料到資料庫..."
 python seed_data.py
 
-# 結束後退出虛擬環境
-Write-Host "退出虛擬環境..."
-deactivate
+# 確認 log 資料夾是否已建立
+if (Test-Path ".\log") {
+    Write-Output "log 資料夾已存在。"
+}
+else {
+    Write-Output "log 建立資料夾建立。"
+    New-Item -ItemType Directory -Path ".\log"
+}
 
 Write-Host "所有操作已完成。"
 
