@@ -6,7 +6,7 @@ class 請購明細更新紀錄(db.Model):
     __tablename__ = '請購明細更新紀錄'
     
     默認主鍵 = Column(Integer, primary_key=True, autoincrement=True)
-    請購明細主鍵 = Column(Integer, ForeignKey('請購明細.默認主鍵'), nullable=False)
+    請購明細主鍵 = Column(Integer, ForeignKey('請購明細.默認主鍵', ondelete='CASCADE'), nullable=False)
     修改人工號簡碼 = Column(String)
     更新種類 = Column(String, nullable=False) # 創建 / 更新
     更新說明 = Column(Text)

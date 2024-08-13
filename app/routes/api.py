@@ -675,7 +675,7 @@ def patch_purchaseRequestStmt_resource(prime_key):
             current_stmt_record.幣別 = stmt_changes.幣別 or current_stmt_record.幣別 or 'TWD'
             current_stmt_record.單位 = stmt_changes.單位 or current_stmt_record.單位 or 'PCE'
             current_stmt_record.物料類別 = stmt_changes.物料類別 or current_stmt_record.物料類別 or '製程雜費'
-            if not 供應商.query.filter_by(簡稱=stmt_changes.供應商簡稱).scalar():
+            if not 供應商.query.filter_by(簡稱=current_stmt_record.供應商簡稱).scalar():
                 raise ValueError(
                     'This supplier is not in the Minmax Supplier List.\n' +
                     'Please collect the required background information of this corporation\n' +

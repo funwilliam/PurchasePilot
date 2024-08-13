@@ -11,7 +11,7 @@ a = data_set['供應商']
 
 
 # 取得供應商CSV檔資料
-df = pd.read_csv('data\供應商.csv', encoding='utf-8')
+df = pd.read_csv('data\供應商.csv', encoding='utf-8', dtype={'供應商編號': str})
 df = df.where(pd.notnull(df), None)
 for index, row in df.iterrows():
     data_set['供應商'].append(
@@ -80,7 +80,7 @@ for index, row in df.iterrows():
 
 
 # 取得捷拓廠區CSV檔資料
-df = pd.read_csv('data\捷拓廠區.csv', encoding='utf-8')
+df = pd.read_csv('data\捷拓廠區.csv', encoding='utf-8', dtype={'地址碼': str})
 df = df.where(pd.notnull(df), None)
 for index, row in df.iterrows():
     data_set['捷拓廠區'].append(

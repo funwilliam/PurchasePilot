@@ -542,15 +542,28 @@
                 let form = {
                     '狀態': status
                 };
-                await patchPurchaseReqStmt(stmt_id, form);
+                // 修改資料庫
+                let patchPurchaseReqStmtResult = await patchPurchaseReqStmt(stmt_id, form);
+                if (patchPurchaseReqStmtResult.status === '上傳成功') {
+                    // 修改前端df
+                    const rowIndex = reqStmtFilterResultDf.loc({ rows: reqStmtFilterResultDf['默認主鍵'].eq(stmt_id) }).index[0];
+                    const colIndex = reqStmtFilterResultDf.columns.indexOf("狀態");
+                    reqStmtFilterResultDf.values[rowIndex][colIndex] = status;
+                }
             }
 
             function showStmtStatusEditor(stmt_id) {
+                const changeStmtStatusSelector = document.getElementById('changeStmtStatusSelector');
                 let modal = new bootstrap.Modal(document.getElementById('stmtChangeStatusModal'));
+                let query = reqStmtFilterResultDf.loc({ rows: reqStmtFilterResultDf['默認主鍵'].eq(stmt_id) });
+
+                if (query.shape[0] !== 1) console.error(`reqStmtFilterResultDf中，不只一筆id=${stmt_id}`);
+                changeStmtStatusSelector.value = dfd.toJSON(query)[0]['狀態'];
+
                 modal.show();
                 document.getElementById('confirmChangeStatusBtn').addEventListener(
                     'click', () => {
-                        changeStmtStatus(stmt_id, document.getElementById('changeStmtStatusSelector').value);
+                        changeStmtStatus(stmt_id, changeStmtStatusSelector.value);
                         modal.hide();
                     },
                     { once: true }

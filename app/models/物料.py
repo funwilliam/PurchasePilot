@@ -8,12 +8,12 @@ class 物料(db.Model):
     默認主鍵 = Column(Integer, primary_key=True, autoincrement=True)
     供應商簡稱 = Column(String, ForeignKey('供應商.簡稱'), nullable=False) # 替代鍵_群組1
     物料代號 = Column(String, nullable=False) # 替代鍵_群組1
-    品名規格 = Column(String, nullable=False)
-    單價 = Column(Float, nullable=False)
-    幣別 = Column(String, nullable=False)
-    單位 = Column(String, nullable=False)
-    預設物料類別 = Column(String, ForeignKey('物料類別.類別')) # 請購單有實際物料類別欄。
-    預設收貨廠區 = Column(String, ForeignKey('捷拓廠區.廠區名稱'), nullable=False) # 資材部建檔與物料管理用，未來可能棄用。請購單有實際收貨地址欄。
+    品名規格 = Column(String)
+    單價 = Column(Float)
+    幣別 = Column(String)
+    單位 = Column(String)
+    預設物料類別 = Column(String) # 請購單有實際物料類別欄。
+    預設收貨廠區 = Column(String) # 請購單有實際收貨地址欄。資材部建檔與物料管理用，未來可能棄用。
     
     報價單檔案主鍵 = Column(Uuid, ForeignKey('檔案.默認主鍵', ondelete='SET NULL'))
 

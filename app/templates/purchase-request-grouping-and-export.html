@@ -103,7 +103,8 @@
     <script src="https://cdn.jsdelivr.net/npm/moment-timezone@0.5.45/builds/moment-timezone-with-data.min.js" integrity="sha256-JATtQzySjqI7GE9O3PpjVjwcGkI8Ny7ESx9Puif0NYY=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha256-CDOy6cOibCWEdsRiZuaHf8dSGGJRYuBGC+mjoJimHGw=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-daterangepicker@3.1.0/daterangepicker.js" integrity="sha256-iOVs1FytPbiP3HcnhtFMzo0MwYebwD5OVr6Rnf2a0ik=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" integrity="sha256-ymhDBwPE9ZYOkHNYZ8bpTSm1o943EH2BAOWjAQB+nm4=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha256-yVBhl8r4CaB1tt7h2g02+xnacVj/6KiOewyWxdhiPJk=" crossorigin="anonymous"></script>
     <script>
         (() => {
             const resourceName_get = [
@@ -499,9 +500,8 @@
              */
             async function generateCSV() {
                 try {
-                    const outputColNames_1 = ['料品代號', '請購數量', '需求日期', '建議廠商', '送貨地址碼', '備註'];
+                    const outputColNames_1 = ['料品代號', '請購數量', '需求日期', '建議廠商', '送貨地址碼', '備註', '單價', '幣別'];
                     const outputColNames_2 = ['備註摘要', '備註說明'];
-                    const outputColNames_3 = ['明細ID', '供應商簡稱', '單價', '幣別'];
 
                     await Promise.all(downloadPromises);
 
@@ -512,7 +512,7 @@
                     }
 
                     const zip = new JSZip();
-                    await generateZipFolders(zip, groups, outputColNames_1, outputColNames_2, outputColNames_3);
+                    await generateZipFolders(zip, groups, outputColNames_1, outputColNames_2);
                     
                     zip.generateAsync({ type: 'blob' })
                         .then(content => saveAs(content, '請購單-匯出日=' + new Date().toISOString().split('T')[0] + '.zip'))
@@ -574,38 +574,63 @@
                 };
             }
 
+            // Helper function to set all cell types to text
+            function setCellTypesToText(ws, colCount, rowCount) {
+                for (let R = 0; R <= rowCount; ++R) {
+                    for (let C = 0; C < colCount; ++C) {
+                        const cellAddress = XLSX.utils.encode_cell({c: C, r: R});
+                        if (ws[cellAddress]) {
+                            ws[cellAddress].t = 's'; // 将单元格类型设置为字符串
+                        }
+                    }
+                }
+            }
+
             /**
-             * Generates folders within a ZIP archive for each group of records and adds the corresponding CSV files.
+             * Generates folders within a ZIP archive for each group of records and adds the corresponding XLSX files.
              *
              * @param {JSZip} zip - The JSZip instance to add folders and files to.
              * @param {Array<Object[]>} groups - The array of grouped records.
-             * @param {Array<string>} outputColNames_1 - Column names for the main CSV file.
-             * @param {Array<string>} outputColNames_2 - Column names for the notes CSV file.
-             * @param {Array<string>} outputColNames_3 - Column names for the freight CSV file.
+             * @param {Array<string>} outputColNames_1 - Column names for the main XLSX file.
+             * @param {Array<string>} outputColNames_2 - Column names for the notes XLSX file.
              * @returns {Promise<void>}
              */
-            async function generateZipFolders(zip, groups, outputColNames_1, outputColNames_2, outputColNames_3) {
+            async function generateZipFolders(zip, groups, outputColNames_1, outputColNames_2) {
                 const folderPromises = groups.map(async (group, index) => {
                     const folder = zip.folder('請購單-' + (index + 1));
-                    let csvRowData_1 = [];
-                    let csvRowData_2 = [];
-                    let csvRowData_3 = [];
+                    let rowData_1 = [];
+                    let rowData_2 = [];
                     group.forEach(row => {
-                        csvRowData_1.push(outputColNames_1.map(colName => `"${row[colName]}"`).join(","));
-                        csvRowData_2.push(outputColNames_2.map(colName => `"${row[colName]}"`).join(","));
-                        row['料品代號'] === 'FREIGHT' && csvRowData_3.push(outputColNames_3.map(colName => `"${row[colName]}"`).join(","));
+                        rowData_1.push(outputColNames_1.map(colName => {
+                            if ((colName === '單價' || colName === '幣別') && row['料品代號'] !== 'FREIGHT') return '';
+                            return row[colName];
+                        }));
+                        rowData_2.push(outputColNames_2.map(colName => row[colName]));
                     });
-                    if (csvRowData_1.length !== 0) {
-                        const csvContent = '\uFEFF' + outputColNames_1.join(",") + "\n" + csvRowData_1.join("\n");
-                        folder.file('[表單]請購主表單.csv', csvContent);
+                    if (rowData_1.length !== 0) {
+                        const ws1 = XLSX.utils.aoa_to_sheet([
+                            outputColNames_1,
+                            ...rowData_1
+                        ]);
+                        setCellTypesToText(ws1, outputColNames_1.length, rowData_1.length);
+
+                        const wb1 = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb1, ws1, '請購主表單');
+                        const xlsxContent1 = XLSX.write(wb1, {bookType: 'xlsx', type: 'array'});
+                        folder.file('[表單]請購主表單.xlsx', xlsxContent1);
                     }
-                    if (csvRowData_2.length !== 0) {
-                        const csvContent = '\uFEFF' + outputColNames_2.join(",") + "\n" + csvRowData_2.join("\n");
-                        folder.file('[表單]備註說明副表單.csv', csvContent);
-                    }
-                    if (csvRowData_3.length !== 0) {
-                        const csvContent = '\uFEFF' + outputColNames_3.join(",") + "\n" + csvRowData_3.join("\n");
-                        folder.file('[補充]運費單價.csv', csvContent);
+
+                    if (rowData_2.length !== 0) {
+                        const ws2 = XLSX.utils.aoa_to_sheet([
+                            outputColNames_2,
+                            ...rowData_2
+                        ]);
+                        setCellTypesToText(ws2, outputColNames_2.length, rowData_2.length);
+
+                        const wb2 = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb2, ws2, '備註說明副表單');
+                        const xlsxContent2 = XLSX.write(wb2, {bookType: 'xlsx', type: 'array'});
+                        folder.file('[表單]備註說明副表單.xlsx', xlsxContent2);
                     }
                     await processAttachments(folder, group);
                 });
