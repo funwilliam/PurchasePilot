@@ -12,11 +12,10 @@ from app import db, home as home_blueprint, api as api_blueprint
 
 dotenv.load_dotenv()
 
-
 def create_app(use_waitress=False):
     app = Flask(__name__, template_folder='app/templates', static_folder='app/static')
-    config_name = os.getenv('FLASK_ENV', 'default')
-    app.config.from_object(config[config_name])
+    config_mode = os.getenv('FLASK_ENV', 'default')
+    app.config.from_object(config[config_mode])
     app.register_blueprint(home_blueprint, url_prefix='')
     app.register_blueprint(api_blueprint, url_prefix='/api')
 
